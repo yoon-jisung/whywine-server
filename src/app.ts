@@ -14,7 +14,7 @@ const clientAddr = process.env.CLIENT_ADDR || 'https://localhost:3000'
 app.use(morgan('dev'));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 app.use(cors(
     {
