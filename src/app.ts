@@ -44,4 +44,8 @@ if (fs.existsSync('./key.pem') && fs.existsSync('./cert.pem')) {
     ).listen(port, () => {
         console.log('https server on ' + port);
         })
-};
+}else {
+    server = app.listen(80, async () => {
+        console.log('http server on ' + 80);
+    });
+}
