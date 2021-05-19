@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import ormconfig from "../ormconfig";
+import passport from 'passport'
 const connection = createConnection(ormconfig);
 
 dotenv.config();
@@ -18,7 +19,7 @@ import auth from './routers/auth';
 
 const port: number = 4000;
 const app: Application = express();
-const clientAddr = process.env.CLIENT_ADDR || "https://localhost:3000";
+const clientAddr = process.env.CLIENT_ADDR || "http://localhost:3000";
 
 app.use(morgan("dev"));
 
@@ -33,6 +34,16 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+const GoogleStrategy = require( 'passport-google-oauth2' ).Strategy;
+
+passport.use(new GoogleStrategy({
+    clientID:     process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:4000/auth/google/callback",
+    passReqToCallback   : true
+  },(accesToken:string,refreshToken:string)=>{console.log('토큰들',accesToken,refreshToken)}
+));
 
 app.use('/', index);
 app.use('/auth', auth);
