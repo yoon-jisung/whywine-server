@@ -8,13 +8,12 @@ import dotenv from "dotenv";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import ormconfig from "../ormconfig";
-const connection = createConnection(ormconfig);
+import indexRouter from "./routers/index";
+import authRouter from "./routers/auth";
+import imageRouter from "./routers/image";
 
 dotenv.config();
-
-import index from './routers/index';
-import auth from './routers/auth';
-
+const connection = createConnection(ormconfig);
 
 const port: number = 4000;
 const app: Application = express();
@@ -34,8 +33,9 @@ app.use(
 );
 app.use(cookieParser());
 
-app.use('/', index);
-app.use('/auth', auth);
+app.use("/", indexRouter);
+app.use("/auth", authRouter);
+app.use("/image", imageRouter);
 
 let server;
 
