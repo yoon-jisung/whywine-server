@@ -7,6 +7,10 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import index from './routers/index';
+import auth from './routers/auth';
+
+
 const port: number = 4000;
 const app: Application = express();
 const clientAddr = process.env.CLIENT_ADDR || 'https://localhost:3000'
@@ -25,12 +29,9 @@ app.use(cors(
     ));
 app.use(cookieParser());
 
-app.get(
-    "/",
-    (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        res.send("hello typescript express!");
-    }
-);
+app.use('/', index);
+app.use('/auth', auth);
+
 
 let server;
 
