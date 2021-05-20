@@ -9,7 +9,8 @@ import "reflect-metadata";
 
 import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
-import userRouter from "./routes/user";
+import userRouter from "./routers/user";
+import imageRouter from "./routers/image";
 
 dotenv.config();
 
@@ -35,7 +36,6 @@ app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);
 app.use("/user", userRouter);
-
 
 let server;
 
