@@ -25,8 +25,8 @@ export class Wine {
   @Column()
   description: string;
 
-  @Column({ type: "blob" })
-  image: Buffer;
+  @Column()
+  image: string;
 
   @Column()
   price: number;

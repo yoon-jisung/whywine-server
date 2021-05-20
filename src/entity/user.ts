@@ -30,8 +30,8 @@ export class User {
   @Column()
   likes: number;
 
-  @Column("blob")
-  image: Buffer;
+  @Column()
+  image: string;
 
   // 사용자의 선호 태그 join table
   @ManyToMany(() => Tag)
