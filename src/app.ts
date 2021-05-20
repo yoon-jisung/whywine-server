@@ -6,14 +6,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import "reflect-metadata";
-import { createConnection } from "typeorm";
-import ormconfig from "../ormconfig";
+
 import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
-import imageRouter from "./routers/image";
+import userRouter from "./routes/user";
 
 dotenv.config();
-const connection = createConnection(ormconfig);
 
 const port: number = 4000;
 const app: Application = express();
@@ -36,6 +34,8 @@ app.use(cookieParser());
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);
+app.use("/user", userRouter);
+
 
 let server;
 
