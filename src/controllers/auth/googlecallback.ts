@@ -7,9 +7,8 @@ import axios, { AxiosResponse } from "axios";
 //import { user } from '../../models/user';
 dotenv.config();
 
-const google = async (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("google", {
-        scope: ["profile", "email"]
-    })
+const googlecallback = async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("google")
 }
-export default google;
+
+export default googlecallback;
