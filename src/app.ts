@@ -31,6 +31,7 @@ app.use(
 );
 app.use(cookieParser());
 
+app.use('/userinfo', userinfo);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);
