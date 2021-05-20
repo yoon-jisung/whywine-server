@@ -6,11 +6,13 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import "reflect-metadata";
+
 import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
 import userRouter from "./routes/user";
 
 dotenv.config();
+
 const port: number = 4000;
 const app: Application = express();
 const clientAddr = process.env.CLIENT_ADDR || "https://localhost:3000";
@@ -31,7 +33,9 @@ app.use(cookieParser());
 
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
+app.use("/image", imageRouter);
 app.use("/user", userRouter);
+
 
 let server;
 
