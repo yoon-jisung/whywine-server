@@ -2,7 +2,9 @@ import { Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto'
 import dotenv from 'dotenv';
-//import { user } from '../../models/user';
+import {getRepository} from "typeorm";
+import {User} from '../../entity/user';
+const userRepository = getRepository(User);
 dotenv.config();
 
 const signin = async (req: Request, res: Response, next: NextFunction) => {
@@ -21,7 +23,7 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
 
 
 
-    let userInfo = await user.findOne({
+    let userInfo = await userRepository.findOne({
         where: { email: req.body.email, password: hashPassword },
     });
     //console.log(userInfo);
@@ -33,7 +35,6 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
 //이메일 오류 추가하기!!!!!!!!!!!!!!!
 
     } else {
-        delete userInfo.dataValues.password;
         const accessToken = jwt.sign(
             userInfo,
             process.env.ACCTOKEN_SECRET!,

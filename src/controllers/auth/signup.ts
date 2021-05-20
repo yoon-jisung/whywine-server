@@ -2,7 +2,6 @@ import { Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto'
 import dotenv from 'dotenv';
-//import { user } from '../../models/user';
 dotenv.config();
 
 const signup = async (req: Request, res: Response, next: NextFunction) => {

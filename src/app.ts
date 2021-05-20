@@ -8,13 +8,14 @@ import dotenv from "dotenv";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import ormconfig from "../ormconfig";
-import passport from 'passport'
 const connection = createConnection(ormconfig);
 
 dotenv.config();
 
 import index from './routers/index';
 import auth from './routers/auth';
+import userinfo from './routers/userinfo';
+
 
 
 const port: number = 4000;
@@ -35,18 +36,9 @@ app.use(
 );
 app.use(cookieParser());
 
-const GoogleStrategy = require( 'passport-google-oauth2' ).Strategy;
-
-passport.use(new GoogleStrategy({
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/auth/google/callback",
-    passReqToCallback   : true
-  },(accesToken:string,refreshToken:string)=>{console.log('토큰들',accesToken,refreshToken)}
-));
-
 app.use('/', index);
 app.use('/auth', auth);
+app.use('/userinfo', userinfo);
 
 let server;
 
