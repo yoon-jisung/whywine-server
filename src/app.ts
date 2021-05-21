@@ -16,7 +16,7 @@ dotenv.config();
 
 const port: number = 4000;
 const app: Application = express();
-const clientAddr = process.env.CLIENT_ADDR || "http://localhost:3000";
+const clientAddr = /* process.env.CLIENT_ADDR || */ "https://localhost:3000";
 
 app.use(morgan("dev"));
 
@@ -32,7 +32,7 @@ app.use(
 );
 app.use(cookieParser());
 
-app.use('/userinfo', userinfo);
+app.use('/userinfo', indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);

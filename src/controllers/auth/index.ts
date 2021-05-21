@@ -1,5 +1,10 @@
 import signup from './signup';
+import google from './google';
+import signin from './signin';
 
-module.exports = {
+
+export = {
     signup,
+    signin,
+    google
 }

@@ -6,7 +6,7 @@ dotenv.config();
 
 const signup = async (req: Request, res: Response, next: NextFunction) => {
     //res.send("hello typescript express!");
-    if (req.body.nickname!=='' && req.body.email!=='' && req.body.password!=='') {
+    /* if (req.body.nickname!=='' && req.body.email!=='' && req.body.password!=='') {
         
 
         const password = req.body.password
@@ -53,6 +53,6 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
         
     } else {
         res.status(400).json({ data: null,  message: "fill email, password and nickname" })
-    }
+    } */
 }
 export default signup;

@@ -4,11 +4,11 @@ import crypto from 'crypto'
 import dotenv from 'dotenv';
 import {getRepository} from "typeorm";
 import {User} from '../../entity/user';
-const userRepository = getRepository(User);
+//const userRepository = getRepository(User);
 dotenv.config();
 
 const signin = async (req: Request, res: Response, next: NextFunction) => {
-
+/* 
     if(req.body.email === '' && req.body.password === ''){
         res.status(400).json({ data: null, message: "fill email and password" })
     }
@@ -54,7 +54,7 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
             sameSite: 'none'
         }).json({ data: accessToken,  message: 'ok' })
     }
-    
+     */
 }
 
 export default signin;

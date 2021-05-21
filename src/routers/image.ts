@@ -4,7 +4,7 @@ import controller from "../controllers/sync";
 
 const router = Router();
 
-router.post(
+/* router.post(
   // 새로운 사진을 한 장 업로드
   "/upload",
   upload.single("img"),
@@ -12,7 +12,7 @@ router.post(
     console.log(req.file);
     res.json({ file: req.file });
   }
-);
+); */
 router.get("/sync", (req: Request, res: Response, next: NextFunction) => {
   controller.sync(req, res);
 }); // wineData의 파일을 업로드
