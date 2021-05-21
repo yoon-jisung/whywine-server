@@ -31,8 +31,11 @@ export class Wine {
   @Column()
   price: number;
 
+  @Column()
+  sort: string;
+
   // 와인에 붙는 태그
   @ManyToMany(() => Tag)
   @JoinTable({ name: "wine_tag" })
-  tags: Tag;
+  tags: Tag[];
 }
