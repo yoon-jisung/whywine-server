@@ -3,37 +3,45 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto'
 import dotenv from 'dotenv';
 import axios, { AxiosResponse } from "axios";
-import {getRepository} from "typeorm";
-import {User} from '../../entity/user';
+import { getRepository, createConnection } from "typeorm";
+import ormconfig from "../../../ormconfig";
+import { Tag } from "../../entity/tag";
+import { User } from "../../entity/user";
+import { Comment } from "../../entity/comment";
+import { Wine } from "../../entity/wine";
 const userRepository = getRepository(User);
 dotenv.config();
 
 const userinfo = async (req: Request, res: Response, next: NextFunction) => {
     const authorization = req.headers.authorization;
-        let accessTokenData: any
-        if (authorization) {
-            let token = authorization.split(" ")[1];
-            try {
-                accessTokenData = jwt.verify(token, process.env.JWT_SECRET!)
-            }
-            catch (e) {
-                accessTokenData = {};
-            }
-        }
-        if (accessTokenData = {}) {
+    interface userInfo {
+        id: number;
+        email: string;
+        nickname: string;
+        likes?: number;
+        image?: Buffer;
+        tags: Tag[];
+        good?: Comment[];
+        bad?: Comment[];
+        wines?: Wine[];
+    }
+    const connection = await createConnection(ormconfig);
+    if (authorization) {
+        let token: string = authorization.split(" ")[1];
+        let accessTokenData = jwt.verify(token, process.env.JWT_SECRET!)as userInfo
+        
+        if (!accessTokenData) {
             res.json({ data: null, message: 'wrong accessToken' })
         } else {
             let userInfo = await userRepository.findOne({
                 where: { email: accessTokenData.email }
             })
-            /* if(!userInfo){
-                res.status(200).json({ data: userInfo.dataValues, message: "게스트용 토큰이 발급되었습니다" })
-            }else{
-                delete userInfo.dataValues.password;
-                res.status(200).json({ data: userInfo.dataValues, message: "토큰이 발급되었습니다" })
-            } */
+            console.log(userInfo)
             res.status(200).json({ data: userInfo, message: 'ok.' })
         }
+    }else{
+        res.json({ data: null, message: 'wrong accessToken' })
+    }
 }
 
 export default userinfo;
