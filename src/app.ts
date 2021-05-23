@@ -4,7 +4,9 @@ import fs from "fs";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+//import passport from 'passport';
 import dotenv from "dotenv";
+import { createConnection } from "typeorm";
 import "reflect-metadata";
 
 import indexRouter from "./routers/index";
@@ -31,6 +33,8 @@ app.use(
   })
 );
 app.use(cookieParser());
+//app.use(passport.initialize());
+
 
 app.use('/userinfo', indexRouter);
 app.use("/", indexRouter);
@@ -39,7 +43,7 @@ app.use("/image", imageRouter);
 app.use("/user", userRouter);
 
 let server;
-
+createConnection()//데이터베이스 연결
 if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
   server = https
     .createServer(

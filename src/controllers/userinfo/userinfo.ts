@@ -28,7 +28,7 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
     const connection = await createConnection(ormconfig);
     if (authorization) {
         let token: string = authorization.split(" ")[1];
-        let accessTokenData = jwt.verify(token, process.env.JWT_SECRET!)as userInfo
+        let accessTokenData = jwt.verify(token, process.env.ACCTOKEN_SECRET!)as userInfo
         
         if (!accessTokenData) {
             res.json({ data: null, message: 'wrong accessToken' })
