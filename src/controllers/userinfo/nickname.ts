@@ -6,10 +6,11 @@ import { Tag } from "../../entity/tag";
 import { User } from "../../entity/user";
 import { Comment } from "../../entity/comment";
 import { Wine } from "../../entity/wine";
-const userRepository = getRepository(User);
+
 dotenv.config();
 
 const nickname = async (req: Request, res: Response, next: NextFunction) => {
+    const userRepository = getRepository(User);
     const {newNickname, accessToken} = req.body
     interface userInfo {
         id: number;

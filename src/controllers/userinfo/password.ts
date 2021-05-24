@@ -4,10 +4,11 @@ import crypto from 'crypto'
 import dotenv from 'dotenv';
 import { getRepository, getConnection } from "typeorm";
 import { User } from "../../entity/user";
-const userRepository = getRepository(User);
+
 dotenv.config();
 
 const password = async (req: Request, res: Response, next: NextFunction) => {
+    //const userRepository = getRepository(User);
     const {oldPassword, newPassword, accessToken} = req.body
     interface userInfo {
         id: number;
@@ -46,6 +47,7 @@ const password = async (req: Request, res: Response, next: NextFunction) => {
     .update(newsaltedPassword)
     .digest('hex');
     console.log('새로운 암호화된 패스워드---', newHashPassword);
+    
     await getConnection()
         .createQueryBuilder()
         .update(User)
