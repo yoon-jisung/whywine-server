@@ -11,12 +11,16 @@ import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
 import userRouter from "./routers/user";
 import imageRouter from "./routers/image";
-
+import mainRouter from "./routers/main";
+import { createConnection } from "typeorm";
+import ormconfig from "../ormconfig";
 dotenv.config();
 
 const port: number = 4000;
 const app: Application = express();
 const clientAddr = process.env.CLIENT_ADDR || "http://localhost:3000";
+
+const connection = createConnection(ormconfig);
 
 app.use(morgan("dev"));
 
@@ -32,12 +36,12 @@ app.use(
 );
 app.use(cookieParser());
 
-app.use('/userinfo', userinfo);
+app.use("/userinfo", userinfo);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);
 app.use("/user", userRouter);
-
+app.use("/main", mainRouter);
 let server;
 
 if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
