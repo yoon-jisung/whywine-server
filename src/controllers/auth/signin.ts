@@ -45,12 +45,12 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
     });
     if(userInfo){
         const accessToken = jwt.sign(
-            userInfo,
+            {userInfo},
             process.env.ACCTOKEN_SECRET!,
             { expiresIn: '30m' }
         );
         const refreshToken = jwt.sign(
-            userInfo,
+            {userInfo},
             process.env.REFTOKEN_SECRET!,
             { expiresIn: '1h' }
         );
