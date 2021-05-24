@@ -9,9 +9,21 @@ export = {
     interface sortedWine {
       [index: number]: object[];
     }
-    const tags: string[] = req.body.tags;
     const connection = getConnection();
+    const tags: string[] = req.body.tags;
+
     const wineRepo = await connection.getRepository(Wine);
+    const tagRepo = await connection.getRepository(Tag);
+
+    for (let tag of tags) {
+      console.log(tag);
+      let result = await tagRepo.find({ name: tag });
+      console.log(result);
+      if (result.length === 0) {
+        res.status(204).send({ message: "tag not existed" });
+        return;
+      }
+    }
 
     const wines: Wine[] = await wineRepo
       .createQueryBuilder("wine")
@@ -27,10 +39,13 @@ export = {
       sorted[wine.tags.length].push(wine);
     }
 
-    console.log(JSON.stringify(sorted, null, 4));
-
     res.status(200).send({
       message: "ok.",
+      data: {
+        wines: {
+          sorted,
+        },
+      },
     });
   },
   search: async (req: Request, res: Response) => {},
