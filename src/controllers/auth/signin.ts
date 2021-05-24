@@ -4,13 +4,14 @@ import crypto from 'crypto'
 import dotenv from 'dotenv';
 import {getRepository} from "typeorm";
 import {User} from '../../entity/user';
-const userRepository = getRepository(User);
+
+
 dotenv.config();
 
 const signin = async (req: Request, res: Response, next: NextFunction) => {
-
+    const userRepository = await getRepository(User);
     if(req.body.email === '' && req.body.password === ''){
-        res.status(400).json({ data: null, message: "fill email and password" })
+        return res.status(400).json({ data: null, message: "fill email and password" })
     }
 
     const password = req.body.password
@@ -21,27 +22,35 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
         .digest('hex');
     console.log('암호화된 패스워드---', hashPassword);
 
-
-
-    let userInfo = await userRepository.findOne({
-        where: { email: req.body.email, password: hashPassword },
+    const findEmail = await userRepository.findOne({
+        where: { email: req.body.email },
     });
-    //console.log(userInfo);
-    if (!userInfo) {
+    if(!findEmail){
+        res.status(401).json({
+            data: null,
+            message: "wrong email",
+        });
+    }
+    const findPassword = await userRepository.findOne({
+        where: { password: hashPassword },
+    });
+    if (!findPassword) {
         res.status(401).json({
             data: null,
             message: "wrong password",
         });
-//이메일 오류 추가하기!!!!!!!!!!!!!!!
-
-    } else {
+    }
+    const userInfo = await userRepository.findOne({
+        where: { email:req.body.email, password: hashPassword },
+    });
+    if(userInfo){
         const accessToken = jwt.sign(
-            userInfo,
+            {userInfo},
             process.env.ACCTOKEN_SECRET!,
             { expiresIn: '30m' }
         );
         const refreshToken = jwt.sign(
-            userInfo,
+            {userInfo},
             process.env.REFTOKEN_SECRET!,
             { expiresIn: '1h' }
         );
