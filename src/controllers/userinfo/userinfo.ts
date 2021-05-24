@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction} from 'express';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto'
 import dotenv from 'dotenv';
-import axios, { AxiosResponse } from "axios";
 import { getRepository, createConnection } from "typeorm";
-import ormconfig from "../../../ormconfig";
 import { Tag } from "../../entity/tag";
 import { User } from "../../entity/user";
 import { Comment } from "../../entity/comment";
@@ -25,7 +22,7 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
         bad?: Comment[];
         wines?: Wine[];
     }
-    const connection = await createConnection(ormconfig);
+
     if (authorization) {
         let token: string = authorization.split(" ")[1];
         let accessTokenData = jwt.verify(token, process.env.ACCTOKEN_SECRET!)as userInfo
@@ -33,6 +30,7 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
         if (!accessTokenData) {
             res.json({ data: null, message: 'wrong accessToken' })
         } else {
+            //수정해야 할 것 같음
             let userInfo = await userRepository.findOne({
                 where: { email: accessTokenData.email }
             })
