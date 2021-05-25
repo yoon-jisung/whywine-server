@@ -10,4 +10,8 @@ router.post("/update", (req: Request, res: Response) => {
 router.post("/like", (req: Request, res: Response) => {
   controller.like(req, res);
 });
+
+router.post("/unlike", (req: Request, res: Response) => {
+  controller.unlike(req, res);
+});
 export = router;
