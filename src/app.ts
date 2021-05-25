@@ -13,12 +13,15 @@ import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
 import userRouter from "./routers/user";
 import imageRouter from "./routers/image";
-
+import mainRouter from "./routers/main";
+import ormconfig from "../ormconfig";
 dotenv.config();
 
 const port: number = 4000;
 const app: Application = express();
 const clientAddr = /* process.env.CLIENT_ADDR || */ "https://localhost:3000";
+
+const connection = createConnection(ormconfig);
 
 app.use(morgan("dev"));
 
@@ -35,15 +38,13 @@ app.use(
 app.use(cookieParser());
 //app.use(passport.initialize());
 
-
-app.use('/userinfo', indexRouter);
+app.use("/userinfo", indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/image", imageRouter);
 app.use("/user", userRouter);
-
+app.use("/main", mainRouter);
 let server;
-createConnection()//데이터베이스 연결
 if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
   server = https
     .createServer(
