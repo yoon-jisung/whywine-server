@@ -60,4 +60,41 @@ export = {
       res.status(401).send({ message: "accessToken not existed" });
     }
   },
+  like: async (req: Request, res: Response) => {
+    interface TokenInterface {
+      // verified accessToken의 인터페이스
+      id: number;
+      email: string;
+      nickname: string;
+      likes?: number;
+      image?: Buffer;
+      tags: Tag[];
+      good?: Comment[];
+      bad?: Comment[];
+      wines?: Wine[];
+    }
+    const wineId: number = req.body.wineId;
+    const accessToken: string = req.body.accessToken;
+    const userinfo = jwt.verify(
+      accessToken,
+      process.env.ACCTOKEN_SECRET!
+    ) as TokenInterface;
+
+    const connection = await createConnection(ormconfig); // 데이터베이스와 연결
+    const wineRepo = await connection.getRepository(Wine);
+    const userRepo = await connection.getRepository(User);
+
+    const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
+    const user: User | undefined = await userRepo.findOne({ id: userinfo.id });
+
+    if (!userinfo || !user) {
+      res.status(401).send({ message: "accessToken not existed" });
+    } else if (wine === undefined || !wine) {
+      res.status(404).send({ message: "wine not existed" });
+    } else {
+      user.wines = [...user.wines, wine];
+      await userRepo.save(user);
+      res.status(200).send({ message: "ok" });
+    }
+  },
 };

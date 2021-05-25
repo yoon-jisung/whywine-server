@@ -7,4 +7,7 @@ router.post("/update", (req: Request, res: Response) => {
   controller.update(req, res);
 });
 
+router.post("/like", (req: Request, res: Response) => {
+  controller.like(req, res);
+});
 export = router;
