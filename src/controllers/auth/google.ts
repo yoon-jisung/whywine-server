@@ -14,7 +14,7 @@ const google = async (req: Request, res: Response, next: NextFunction) => {
     passport.use(new GoogleStrategy({
         clientID:     process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "https://localhost:4000/auth/google/callback",
+        callbackURL: "https://localhost:4000/auth/google",
         passReqToCallback   : true
     },(accesToken:string,refreshToken:string)=>{console.log('토큰들',accesToken,refreshToken)}
     ));
