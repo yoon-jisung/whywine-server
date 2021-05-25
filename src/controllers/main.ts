@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { getConnection } from "typeorm";
-import ormconfig, { name } from "../../ormconfig";
+import { getConnection, Like } from "typeorm";
 import { Tag } from "../entity/tag";
 import { Wine } from "../entity/wine";
 
@@ -16,9 +15,7 @@ export = {
     const tagRepo = await connection.getRepository(Tag);
 
     for (let tag of tags) {
-      console.log(tag);
       let result = await tagRepo.find({ name: tag });
-      console.log(result);
       if (result.length === 0) {
         res.status(204).send({ message: "tag not existed" });
         return;
@@ -48,5 +45,30 @@ export = {
       },
     });
   },
-  search: async (req: Request, res: Response) => {},
+  search: async (req: Request, res: Response) => {
+    const word = req.query.word;
+    const connection = getConnection();
+
+    const wineRepo = await connection.getRepository(Wine);
+
+    let searchResult: Wine[] = await wineRepo
+      .createQueryBuilder("wine")
+      .innerJoinAndSelect("wine.tags", "tag")
+      .where("tag.name like :word", { word: `%${word}%` })
+      .orWhere("wine.name like :word", { word: `%${word}%` })
+      .orWhere("wine.sort like :word", { word: `%${word}%` })
+      .orWhere("wine.description like :word", { word: `%${word}%` })
+      .getMany();
+
+    if (searchResult.length === 0 || !searchResult) {
+      res.status(204).send({ message: "search not existed" });
+    } else {
+      res.status(200).send({
+        message: "ok.",
+        data: {
+          wines: searchResult,
+        },
+      });
+    }
+  },
 };
