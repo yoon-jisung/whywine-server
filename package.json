@@ -22,7 +22,7 @@
   "homepage": "https://github.com/cjs1301/whywine-server#readme",
   "dependencies": {
     "@types/passport-google-oauth2": "^0.1.3",
-    "aws-sdk": "^2.912.0",
+    "aws-sdk": "^2.913.0",
     "axios": "^0.21.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
