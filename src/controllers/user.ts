@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createConnection } from "typeorm";
+import { getConnection } from "typeorm";
 import ormconfig from "../../ormconfig";
 import { Tag } from "../entity/tag";
 import { User } from "../entity/user";
@@ -22,8 +22,7 @@ export = {
       bad?: Comment[];
       wines?: Wine[];
     }
-    const connection = await createConnection(ormconfig); // 데이터베이스와 연결
-
+    const connection = await getConnection();
     const tags: string[] = req.body.tags;
     const accessToken: string = req.body.accessToken;
     const { id } = jwt.verify(
@@ -80,7 +79,7 @@ export = {
       process.env.ACCTOKEN_SECRET!
     ) as TokenInterface;
 
-    const connection = await createConnection(ormconfig); // 데이터베이스와 연결
+    const connection = await getConnection(); // 데이터베이스와 연결
     const wineRepo = await connection.getRepository(Wine);
     const userRepo = await connection.getRepository(User);
 
@@ -117,7 +116,7 @@ export = {
       process.env.ACCTOKEN_SECRET!
     ) as TokenInterface;
 
-    const connection = await createConnection(ormconfig); // 데이터베이스와 연결
+    const connection = await getConnection(); // 데이터베이스와 연결
     const wineRepo = await connection.getRepository(Wine);
     const userRepo = await connection.getRepository(User);
 

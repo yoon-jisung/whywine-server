@@ -1,4 +1,4 @@
-import { createConnection } from "typeorm";
+import { getConnection } from "typeorm";
 import ormconfig from "../../ormconfig";
 import { Wine } from "../entity/wine";
 import wineData from "../../wineData/wineData.json";
@@ -8,7 +8,7 @@ require("dotenv").config();
 
 export = {
   sync: async (req: Request, res: Response) => {
-    const connection = await createConnection(ormconfig);
+    const connection = await getConnection();
     let wineRepo = await connection.getRepository(Wine);
     let tagRepo = await connection.getRepository(Tag);
 
