@@ -4,11 +4,12 @@ import fs from "fs";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-//import passport from 'passport';
+import passport from 'passport';
 import dotenv from "dotenv";
 import { createConnection } from "typeorm";
 import "reflect-metadata";
 
+import passportConfig from './utils/strategy/index';
 import indexRouter from "./routers/index";
 import authRouter from "./routers/auth";
 import userRouter from "./routers/user";
@@ -36,8 +37,9 @@ app.use(
   })
 );
 app.use(cookieParser());
-//app.use(passport.initialize());
 
+passportConfig();
+app.use(passport.initialize())
 app.use("/userinfo", indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
