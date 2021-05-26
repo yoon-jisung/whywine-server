@@ -3,17 +3,39 @@ import { getConnection, Like } from "typeorm";
 import { Tag } from "../entity/tag";
 import { Wine } from "../entity/wine";
 
+interface sortedWine {
+  [index: number]: Wine[];
+  random3?: Wine[];
+}
+
+const getRandomThree = (sorted: sortedWine): Wine[] => {
+  let random3: Wine[] = [];
+  const sortedKeys: number[] = Object.keys(sorted)
+    .map((el) => Number(el))
+    .sort((a, b) => b - a);
+
+  for (let key of sortedKeys) {
+    let len = sorted[key].length;
+    while (len !== 0 && random3.length < 3) {
+      let idx = Math.floor(Math.random() * len);
+      random3 = [...random3, sorted[key][idx]];
+      len--;
+    }
+  }
+  return random3;
+};
 export = {
   tags: async (req: Request, res: Response) => {
-    interface sortedWine {
-      [index: number]: object[];
-    }
     const connection = getConnection();
     const tags: string[] = req.body.tags;
 
     const wineRepo = await connection.getRepository(Wine);
     const tagRepo = await connection.getRepository(Tag);
 
+    if (tags.length === 0) {
+      res.status(204).send("tag not existed");
+      return;
+    }
     for (let tag of tags) {
       let result = await tagRepo.find({ name: tag });
       if (result.length === 0) {
@@ -36,6 +58,7 @@ export = {
       sorted[wine.tags.length].push(wine);
     }
 
+    sorted["random3"] = getRandomThree(sorted);
     res.status(200).send({
       message: "ok.",
       data: {
@@ -44,6 +67,7 @@ export = {
         },
       },
     });
+    return;
   },
   search: async (req: Request, res: Response) => {
     const word = req.query.word;
