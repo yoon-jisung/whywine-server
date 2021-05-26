@@ -9,17 +9,17 @@ interface sortedWine {
 }
 
 const getRandomThree = (sorted: sortedWine): Wine[] => {
-  const random3: Wine[] = [];
+  let random3: Wine[] = [];
   const sortedKeys: number[] = Object.keys(sorted)
     .map((el) => Number(el))
     .sort((a, b) => b - a);
+
   for (let key of sortedKeys) {
-    let level = sorted[key].length;
-    while (level !== 0 && random3.length < 3) {
-      let idx = Math.floor(Math.random() * sorted[key].length);
-      random3.push(sorted[key][idx]);
-      sorted[key].splice(idx, 1);
-      level--;
+    let len = sorted[key].length;
+    while (len !== 0 && random3.length < 3) {
+      let idx = Math.floor(Math.random() * len);
+      random3 = [...random3, sorted[key][idx]];
+      len--;
     }
   }
   return random3;
