@@ -15,7 +15,9 @@ import authRouter from "./routers/auth";
 import userRouter from "./routers/user";
 import imageRouter from "./routers/image";
 import mainRouter from "./routers/main";
+import commentRouter from "./routers/comment";
 import ormconfig from "../ormconfig";
+
 dotenv.config();
 
 const port: number = 4000;
@@ -46,6 +48,8 @@ app.use("/auth", authRouter);
 app.use("/image", imageRouter);
 app.use("/user", userRouter);
 app.use("/main", mainRouter);
+app.use("/comment", commentRouter);
+
 let server;
 if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
   server = https
