@@ -23,9 +23,9 @@ interface userInfo {
 
 const userinfo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log(req.session)
+
     const user = await createQueryBuilder("user")
-      .where("id = :id", { /* id: req.session.passport.user  */})
+      .where("id = :id", { id: req.session!.passport!.user })
       .execute();
     if (user.length !== 0) {
       return res.status(200).send(

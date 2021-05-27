@@ -55,7 +55,6 @@ app.use(expressSession({
 app.use(cookieParser());
 app.use(passport.initialize())
 app.use(passport.session());
-app.use("/userinfo", indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/userinfo", userinfoRouter);
