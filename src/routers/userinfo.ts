@@ -1,13 +1,18 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from "express";
 const express = require("express");
 const router = express.Router();
-const { userinfo, nickname, password, leave } = require('../controllers/userinfo')
-import upload from '../utils/upload'
+const {
+  userinfo,
+  nickname,
+  password,
+  leave,
+} = require("../controllers/userinfo");
+import upload from "../utils/upload";
 
-router.get("/",userinfo);
-router.post("/",nickname);
-router.post("/",password);
-router.get("/",leave);
-router.get('',upload.single('img'),)
+router.get("/", userinfo);
+router.post("/nickname", nickname);
+router.post("/password", password);
+router.get("/leave", leave);
+router.get("/upload", upload.single("img"));
 
 export default router;

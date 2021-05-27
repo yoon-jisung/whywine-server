@@ -16,7 +16,7 @@ export = {
       email: string;
       nickname: string;
       likes?: number;
-      image?: Buffer;
+      image?: string;
       tags: Tag[];
       good?: Comment[];
       bad?: Comment[];
