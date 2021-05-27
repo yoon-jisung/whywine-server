@@ -4,10 +4,11 @@ import { User } from "../../entity/user";
 import { createQueryBuilder, getRepository } from "typeorm";
 const KakaoStrategy = require('passport-kakao').Strategy;
 dotenv.config();
+const server = process.env.SERVER || 'https://localhost:4000'
 export default () => {
     passport.use(new KakaoStrategy({
         clientID:     process.env.KAKAO_CLIENT_ID,
-        callbackURL: "https://localhost:4000/auth/kakao/callback",
+        callbackURL: `${server}/auth/kakao/callback`,
     },async function(accessToken:string, refreshToken:string, profile:any, cb:any){
                         
         try {
