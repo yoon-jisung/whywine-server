@@ -57,14 +57,20 @@ export = {
     }
   },
   get: async (req: Request, res: Response) => {
-    const wineId: number = Number(req.query.wineid);
-    const accessToken = req.headers["authorization"]?.split(" ")[1];
-    const connection = getConnection();
-    const userRepo = await connection.getRepository(User);
-    const wineRepo = await connection.getRepository(Wine);
-    const commentRepo = await connection.getRepository(Comment);
-
     try {
+      const connection = getConnection();
+      const userRepo = await connection.getRepository(User);
+      const wineRepo = await connection.getRepository(Wine);
+      const commentRepo = await connection.getRepository(Comment);
+
+      const wineId: number = Number(req.query.wineid);
+      let accessToken;
+      if (req.headers["authorization"]) {
+        accessToken = req.headers["authorization"].split(" ")[1];
+      } else {
+        throw new Error();
+      }
+
       if (accessToken) {
         const userinfo = jwt.verify(
           accessToken,
