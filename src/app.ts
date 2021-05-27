@@ -22,7 +22,7 @@ dotenv.config();
 
 const port: number = 4000;
 const app: Application = express();
-const clientAddr = /* process.env.CLIENT_ADDR || */ "https://localhost:3000";
+const client = process.env.CLIENT || "https://localhost:3000";
 
 const connection = createConnection(ormconfig);
 
@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: [clientAddr],
+    origin: [client],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS", "DELETE", "PUT"],
   })
@@ -75,7 +75,7 @@ if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
       console.log("https server on " + port);
     });
 } else {
-  server = app.listen(8080, async () => {
-    console.log("http server on " + 8080);
+  server = app.listen(80, async () => {
+    console.log("http server on " + 80);
   });
 }

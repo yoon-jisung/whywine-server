@@ -4,14 +4,14 @@ import { User } from "../../entity/user";
 import dotenv from 'dotenv';
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 dotenv.config();
-
+const server = process.env.SERVER || 'https://localhost:4000'
 export default () => {
     passport.use(
         new GoogleStrategy(
             {
                 clientID: process.env.GOOGLE_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                callbackURL: `${process.env.SERVER_URL}/auth/google/callback`
+                callbackURL: `${server}/auth/google/callback`
             },
             async function (accessToken:string, refreshToken:string, profile:any, cb:any) {
                 
