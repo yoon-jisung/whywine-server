@@ -1,9 +1,7 @@
-import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import passport from 'passport';
 import { User } from "../../entity/user";
 import { createQueryBuilder, getRepository } from "typeorm";
-import jwt from 'jsonwebtoken';
 const KakaoStrategy = require('passport-kakao').Strategy;
 dotenv.config();
 export default () => {
@@ -19,18 +17,7 @@ export default () => {
             const findEmail = await userRepository.findOne({ where: { id } });
             if(findEmail){
                 console.log('카카오기존 가입자')
-                const accessToken:string = jwt.sign(
-                    {findEmail},
-                    process.env.ACCTOKEN_SECRET!,
-                    { expiresIn: '30m' }
-                );
-                const refreshToken:string = jwt.sign(
-                    {findEmail},
-                    process.env.REFTOKEN_SECRET!,
-                    { expiresIn: '1h' }
-                );
-                const tokens = {accessToken,refreshToken}
-                return cb(null,tokens)
+                return cb(null,findEmail)
             }
             console.log('카카오 처음 로그인')
             const userInfo = new User
@@ -40,18 +27,8 @@ export default () => {
             userInfo.likes = 0
             userInfo.image = profile_image
             const saveData = await userRepository.save(userInfo)
-            // const accessToken:string = jwt.sign(
-            //     {saveData},
-            //     process.env.ACCTOKEN_SECRET!,
-            //     { expiresIn: '30m' }
-            // );
-            // const refreshToken:string = jwt.sign(
-            //     {saveData},
-            //     process.env.REFTOKEN_SECRET!,
-            //     { expiresIn: '1h' }
-            // );
-            const tokens = {accessToken,refreshToken}
-            return cb(null,tokens);
+            console.log(saveData)
+            return cb(null,saveData);
         } catch (error) {
             console.log('에러',error)
             return cb(error)

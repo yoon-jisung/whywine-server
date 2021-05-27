@@ -4,6 +4,7 @@ import fs from "fs";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import expressSession from 'express-session';
 import passport from 'passport';
 import dotenv from "dotenv";
 import { createConnection } from "typeorm";
@@ -27,7 +28,7 @@ const connection = createConnection(ormconfig);
 app.use(morgan("dev"));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
@@ -36,10 +37,23 @@ app.use(
     methods: ["GET", "POST", "OPTIONS", "DELETE", "PUT"],
   })
 );
-app.use(cookieParser());
+
 
 passportConfig();
+app.use(expressSession({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET!,
+  cookie: {
+      path: '/',
+      sameSite: 'none',
+      httpOnly: false,
+      secure: true
+  },
+}));
+app.use(cookieParser());
 app.use(passport.initialize())
+app.use(passport.session());
 app.use("/userinfo", indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);

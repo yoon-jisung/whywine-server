@@ -16,7 +16,7 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
         email: string;
         nickname: string;
         likes?: number;
-        image?: Buffer;
+        image?: string;
         tags: Tag[];
         good?: Comment[];
         bad?: Comment[];
