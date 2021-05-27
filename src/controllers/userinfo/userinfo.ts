@@ -10,6 +10,7 @@ import { Wine } from "../../entity/wine";
 dotenv.config();
 
 const userinfo = async (req: Request, res: Response, next: NextFunction) => {
+
   const authorization = req.headers.authorization;
   const userRepository = getRepository(User);
   interface userInfo {
