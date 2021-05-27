@@ -3,11 +3,10 @@ import passport from "passport";
 const express = require("express");
 const router = express.Router();
 
-const { signup, signin, refreshTokenReq } = require("../controllers/auth");
+const { signup, signin } = require("../controllers/auth");
 
 router.post("/signup", signup);
 router.post("/signin", signin);
-router.get("/refreshTokenReq", refreshTokenReq);
 router.get("/logout", (req: Request, res: Response) => {
   console.log(req.body);
   console.log("로그 아웃");
