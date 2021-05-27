@@ -1,26 +1,26 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import passport from 'passport';
+import { Router, Request, Response, NextFunction } from "express";
+import passport from "passport";
 const express = require("express");
 const router = express.Router();
 
-const { signup, signin } = require('../controllers/auth')
+const { signup, signin, refreshTokenReq } = require("../controllers/auth");
 
-router.post("/signup",signup);
-router.post("/signin",signin);
-router.get("/refreshTokenReq",);
-router.get("/logout",(req:Request, res:Response)=>{
-    console.log(req.body)
-    console.log('로그 아웃')
-    res.clearCookie('refreshToken', {
-        path:'/',
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-    }).redirect('/')
+router.post("/signup", signup);
+router.post("/signin", signin);
+router.get("/refreshTokenReq", refreshTokenReq);
+router.get("/logout", (req: Request, res: Response) => {
+  console.log(req.body);
+  console.log("로그 아웃");
+  res
+    .clearCookie("refreshToken", {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+    .redirect("/");
 });
 
-
-//추후 컨트롤러 부분으로 리팩토링 예정
 router.get("/kakao",passport.authenticate('kakao', { scope: ['profile','account_email'] }));
 router.get("/kakao/callback",passport.authenticate('kakao',{ failureRedirect: 'https://localhost:3000'}),
     function (req:Request, res:Response) {
@@ -39,5 +39,5 @@ router.get('/google/callback',
         res.redirect('back')
     });
 
-export default router;
 
+export default router;
