@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { getRepository, createConnection } from "typeorm";
+import { createQueryBuilder } from "typeorm";
 import { Tag } from "../../entity/tag";
 import { User } from "../../entity/user";
 import { Comment } from "../../entity/comment";
@@ -9,43 +8,46 @@ import { Wine } from "../../entity/wine";
 
 dotenv.config();
 
+interface userInfo {
+  // verified accessToken의 인터페이스
+  id: number;
+  email: string;
+  nickname: string;
+  likes?: number;
+  image?: string;
+  tags: Tag[];
+  good?: Comment[];
+  bad?: Comment[];
+  wines?: Wine[];
+}
+
 const userinfo = async (req: Request, res: Response, next: NextFunction) => {
-
-  const authorization = req.headers.authorization;
-  const userRepository = getRepository(User);
-  interface userInfo {
-    userInfo: any;
-    id: number;
-    email: string;
-    nickname: string;
-    likes?: number;
-    image?: string;
-    tags: Tag[];
-    good?: Comment[];
-    bad?: Comment[];
-    wines?: Wine[];
-  }
-
-  if (authorization) {
-    let token: string = authorization.split(" ")[1];
-    let accessTokenData = jwt.verify(
-      token,
-      process.env.ACCTOKEN_SECRET!
-    ) as userInfo;
-
-    if (!accessTokenData) {
-      res.json({ data: null, message: "wrong accessToken" });
-    } else {
-      //수정해야 할 것 같음
-      console.log(accessTokenData);
-      let userInfo = await userRepository.findOne({
-        where: { email: accessTokenData.userInfo.email },
-      });
-      console.log(userInfo);
-      res.status(200).json({ data: userInfo, message: "ok." });
+  try {
+    console.log(req.session)
+    const user = await createQueryBuilder("user")
+      .where("id = :id", { /* id: req.session.passport.user  */})
+      .execute();
+    if (user.length !== 0) {
+      return res.status(200).send(
+        {
+          data: {
+            id: user[0].User_id,
+            email: user[0].User_email,
+            name: user[0].User_name,
+            profileIconURL: user[0].User_profileIconURL,
+            isAdmin: user[0].User_isAdmin
+          },
+          message: "successfully got user info"
+        }
+      );
     }
-  } else {
-    res.json({ data: null, message: "wrong accessToken" });
+  } catch (error) {
+    console.error(error.message);
+    if (error.message === "Cannot read property 'user' of undefined") {
+      res.status(401).send({ data: null, message: "not authorized" });
+    } else {
+      res.status(400).send({ data: null, message: error.message })
+    }
   }
 };
 
