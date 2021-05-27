@@ -11,6 +11,7 @@ import "reflect-metadata";
 
 import passportConfig from './utils/strategy/index';
 import indexRouter from "./routers/index";
+import userinfoRouter from "./routers/userinfo";
 import authRouter from "./routers/auth";
 import userRouter from "./routers/user";
 import imageRouter from "./routers/image";
@@ -40,9 +41,9 @@ app.use(cookieParser());
 
 passportConfig();
 app.use(passport.initialize())
-app.use("/userinfo", indexRouter);
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
+app.use("/userinfo", userinfoRouter);
 app.use("/image", imageRouter);
 app.use("/user", userRouter);
 app.use("/main", mainRouter);

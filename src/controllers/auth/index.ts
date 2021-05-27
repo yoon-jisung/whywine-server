@@ -1,8 +1,9 @@
-import signup from './signup';
-import signin from './signin';
-
+import signup from "./signup";
+import signin from "./signin";
+import refreshTokenReq from "./refreshtoken";
 
 export = {
-    signup,
-    signin,
-}
+  signup,
+  signin,
+  refreshTokenReq,
+};
