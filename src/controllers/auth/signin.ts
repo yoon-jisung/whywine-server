@@ -57,7 +57,6 @@ const signin = async (req: Request, res: Response, next: NextFunction) => {
         res
         .status(201)
         .cookie('refreshToken', refreshToken, {
-            path: '/main',
             httpOnly: true,
             secure: true,
             sameSite: 'none'
