@@ -188,8 +188,6 @@ export = {
         relations: ["good"],
       });
       const comment = await commentRepo.findOne({ id: commentId });
-
-      console.log(user);
     } catch (e) {
       res.status(404).send({ message: "user or commentId not existed." });
     }

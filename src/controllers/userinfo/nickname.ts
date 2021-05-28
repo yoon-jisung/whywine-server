@@ -1,58 +1,33 @@
 import { Request, Response, NextFunction} from 'express';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import { getRepository, getConnection } from "typeorm";
-import { Tag } from "../../entity/tag";
+import { createQueryBuilder } from "typeorm";
 import { User } from "../../entity/user";
-import { Comment } from "../../entity/comment";
-import { Wine } from "../../entity/wine";
+
 
 dotenv.config();
 
 const nickname = async (req: Request, res: Response, next: NextFunction) => {
-    const userRepository = getRepository(User);
-    const {newNickname, accessToken} = req.body
-    interface userInfo {
-        id: number;
-        email: string;
-        nickname: string;
-        likes?: number;
-        image?: Buffer;
-        tags: Tag[];
-        good?: Comment[];
-        bad?: Comment[];
-        wines?: Wine[];
-    }
-    if(!accessToken){
-        return res
-            .status(401)
-            .json({ message: 'wrong accessToken' })
-    }
-    const {id, nickname} = jwt.verify(accessToken,process.env.ACCTOKEN_SECRET!)as userInfo
-    if(nickname === newNickname){
-        return res
-            .status(401)
-            .json({ message: 'same nickname' })
-    }
-    if(newNickname===''){
-        return res
-            .status(401)
-            .json({ message: 'new nickname is empty' })
-    }
-    await getConnection()
-        .createQueryBuilder()
-        .update(User)
-        .set({ 
-            nickname: nickname
-        })
-        .where("id = :id", { id: id })
-        .execute();
-    const userInfo = await userRepository.findOne({
-        where: { id : id }
-    })
-    return res
-        .status(200)
-        .json({ data : userInfo, message : 'ok.' })
+    const { newNickname } = req.body
+    try {
+        const user = await createQueryBuilder("user")
+            .where("id = :id", { id: req.session!.passport!.user })
+            .execute();
+        if (user.length !== 0) {
+            if (newNickname !== '') {
+            await createQueryBuilder("user")
+                .update(User)
+                .set({ name: req.body.name })
+                .where({ id: req.session!.passport!.user })
+                .execute();
+                return res.status(200).send({ data: null, message: "edit success" });
+            } 
+            return res.status(400).send({ data: null, message: "바꿀 닉네임이 없습니다" });
+        }
+    } catch (error) {
+        console.error(error.message);
+            res.status(401).send({ data: null, message: "not authorized" });
+    };
 }
 
 export default nickname;

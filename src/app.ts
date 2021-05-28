@@ -19,6 +19,7 @@ import imageRouter from "./routers/image";
 import mainRouter from "./routers/main";
 import commentRouter from "./routers/comment";
 import ormconfig from "../ormconfig";
+
 dotenv.config();
 
 const port: number = 4000;
@@ -30,7 +31,7 @@ const connection = createConnection(ormconfig);
 app.use(morgan("dev"));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 app.use(
   cors({

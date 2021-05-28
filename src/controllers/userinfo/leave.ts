@@ -1,41 +1,42 @@
 import { Request, Response, NextFunction} from 'express';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import { getRepository, getConnection } from "typeorm";
+import { createQueryBuilder } from "typeorm";
+import * as bcrypt from 'bcrypt';
 import { User } from "../../entity/user";
 
-
-dotenv.config();
-
 const leave = async (req: Request, res: Response, next: NextFunction) => {
-    const userRepository = getRepository(User);
-    const authorization = req.headers.authorization;
-    interface userInfo {
-        id: number;
-        email: string;
-        nickname: string;
-        likes?: number;
-        image?: Buffer;
-    }
-    if (authorization) {
-        let token: string = authorization.split(" ")[1];
-        let {id} = jwt.verify(token, process.env.ACCTOKEN_SECRET!)as userInfo
-        
-        if (!id) {
-            res.json({ data: null, message: 'wrong accessToken' })
-        } else {
-            await getConnection()
-                .createQueryBuilder()
-                .delete()
-                .from(User)
-                .where("id = :id", { id: id })
-                .execute();
-            
-            console.log('유저정보 삭제완료')
-            res.status(200).json({ message: 'deleted and cookie destroyed' })
+    try {
+        const user = await createQueryBuilder("user")
+            .where("id = :id", { id: req.session!.passport!.user })
+            .execute();
+        if (user.length !== 0) {
+                let result: boolean = false;
+            try {
+                result = await bcrypt.compare(req.body.password, user[0].User_password);
+            } catch (e) {
+                return res.status(400).send({
+                    data: null,
+                    message: "password required"
+                })
+            }
+            if (result) {
+                await createQueryBuilder("user")
+                    .delete()
+                    .from(User)
+                    .where({ id: req.session!.passport!.user })
+                    .execute();
+                console.log(`탈퇴한 회원입니다: ${req.session!.passport!.user}`);
+                req.logout();
+                return res.status(200).send({ data: null, message: "ok" });
+            } else {
+                return res.status(400).send({
+                    data: null,
+                    message: "wrong password"
+                    })
+            }
         }
-    }else{
-        res.json({ data: null, message: 'wrong accessToken' })
+    } catch (error) {
+        console.error(error.message);
+        res.status(401).send({ data: null, message: "not authorized" });
     }
 }
 

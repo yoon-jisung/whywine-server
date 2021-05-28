@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction} from 'express';
 import dotenv from 'dotenv';
 import passport from 'passport';
-
-
 dotenv.config();
 
 const signin = async (req: Request, res: Response, next: NextFunction) => {

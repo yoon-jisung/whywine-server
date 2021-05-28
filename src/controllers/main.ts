@@ -18,8 +18,17 @@ const getRandomThree = (sorted: sortedWine): Wine[] => {
     let len = sorted[key].length;
     while (len !== 0 && random3.length < 3) {
       let idx = Math.floor(Math.random() * len);
-      random3 = [...random3, sorted[key][idx]];
-      len--;
+      let isExist = false;
+      for (let el of random3) {
+        if (el.id === sorted[key][idx].id) {
+          isExist = true;
+          break;
+        }
+      }
+      if (!isExist) {
+        random3 = [...random3, sorted[key][idx]];
+        len--;
+      }
     }
   }
   return random3;
@@ -28,27 +37,36 @@ export = {
   tags: async (req: Request, res: Response) => {
     const connection = getConnection();
     const tags: string[] = req.body.tags;
+    const sort: string[] = req.body.sort;
 
     const wineRepo = await connection.getRepository(Wine);
     const tagRepo = await connection.getRepository(Tag);
 
-    if (tags.length === 0) {
-      res.status(204).send("tag not existed");
-      return;
-    }
-    for (let tag of tags) {
-      let result = await tagRepo.find({ name: tag });
-      if (result.length === 0) {
-        res.status(204).send({ message: "tag not existed" });
-        return;
-      }
-    }
+    let wines: Wine[] = [];
 
-    const wines: Wine[] = await wineRepo
-      .createQueryBuilder("wine")
-      .innerJoinAndSelect("wine.tags", "tag")
-      .where("tag.name IN (:...name)", { name: tags })
-      .getMany();
+    if (tags.length === 0 && sort.length === 0) {
+      res.status(204).send();
+      return;
+    } else if (tags.length !== 0 && sort.length === 0) {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("tag.name IN (:...name)", { name: tags })
+        .getMany();
+    } else if (tags.length === 0 && sort.length !== 0) {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("sort IN (:...sort)", { sort })
+        .getMany();
+    } else {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("tag.name IN (:...name)", { name: tags })
+        .andWhere("sort IN (:...sort)", { sort })
+        .getMany();
+    }
 
     const sorted: sortedWine = {};
     for (let wine of wines) {

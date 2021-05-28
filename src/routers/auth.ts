@@ -1,44 +1,20 @@
-import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import dotenv from 'dotenv'
 const express = require("express");
 const router = express.Router();
 dotenv.config()
+
 const client = process.env.client || 'https://localhost:3000'
-const { signup, signin } = require("../controllers/auth");
+const { signup, signin, sociallogin, logout } = require("../controllers/auth");
 
 router.post("/signup", signup);
 router.post("/signin", signin);
-router.get("/logout", (req: Request, res: Response) => {
-  console.log(req.body);
-  console.log("로그 아웃");
-  res
-    .clearCookie("refreshToken", {
-      path: "/",
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    })
-    .redirect("/");
-});
+router.get("/logout", logout);
 
-router.get("/kakao",passport.authenticate('kakao', { scope: ['profile','account_email'] }));
-router.get("/kakao/callback",passport.authenticate('kakao',{ failureRedirect: `${client}`}),
-    function (req:Request, res:Response) {
-        console.log('카카오콜백성공')
-        res.redirect('back')
-    });
+router.get("/kakao", passport.authenticate('kakao', { scope: ['profile','account_email'] }));
+router.get("/kakao/callback", passport.authenticate('kakao',{ failureRedirect: `${client}`}), sociallogin);
 
-router.get('/google',
-    passport.authenticate('google',{ scope: ['profile','email'], accessType: "offline" })
-    );
-router.get('/google/callback',
-    passport.authenticate('google',{ failureRedirect: `${client}`}),
-    function (req:Request, res:Response) {
-        // Successful authentication, redirect home.
-        console.log('구글콜백성공')
-        res.redirect('back')
-    });
-
+router.get('/google', passport.authenticate('google',{ scope: ['profile','email'], accessType: "offline" }));
+router.get('/google/callback', passport.authenticate('google',{ failureRedirect: `${client}`}), sociallogin);
 
 export default router;
