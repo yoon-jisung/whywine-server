@@ -33,24 +33,31 @@ export = {
     const wineRepo = await connection.getRepository(Wine);
     const tagRepo = await connection.getRepository(Tag);
 
-    if (tags.length === 0) {
-      res.status(204).send("tag not existed");
-      return;
-    }
-    for (let tag of tags) {
-      let result = await tagRepo.find({ name: tag });
-      if (result.length === 0) {
-        res.status(204).send({ message: "tag not existed" });
-        return;
-      }
-    }
+    let wines: Wine[] = [];
 
-    const wines: Wine[] = await wineRepo
-      .createQueryBuilder("wine")
-      .innerJoinAndSelect("wine.tags", "tag")
-      .where("tag.name IN (:...name)", { name: tags })
-      .andWhere("sort IN (:...sort)", { sort })
-      .getMany();
+    if (tags.length === 0 && sort.length === 0) {
+      res.status(204).send();
+      return;
+    } else if (tags.length !== 0 && sort.length === 0) {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("tag.name IN (:...name)", { name: tags })
+        .getMany();
+    } else if (tags.length === 0 && sort.length !== 0) {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("sort IN (:...sort)", { sort })
+        .getMany();
+    } else {
+      wines = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("tag.name IN (:...name)", { name: tags })
+        .andWhere("sort IN (:...sort)", { sort })
+        .getMany();
+    }
 
     const sorted: sortedWine = {};
     for (let wine of wines) {
