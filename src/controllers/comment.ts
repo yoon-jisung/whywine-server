@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../entity/user";
 import { Recomment } from "../entity/recomment";
 import axios from "axios";
+import { groupCollapsed } from "console";
 require("dotenv").config();
 interface TokenInterface {
   // verified accessToken의 인터페이스
@@ -176,21 +177,10 @@ export = {
     }
   },
   good: async (req: Request, res: Response) => {
-    try {
-      const connection = getConnection();
-      const userRepo = await connection.getRepository(User);
-      const commentRepo = await connection.getRepository(Comment);
-      const { commentId } = req.body;
-
-      //   const userId: number = req.session!.passport!.user;
-      const user = await userRepo.findOne({
-        where: { id: 2 },
-        relations: ["good"],
-      });
-      const comment = await commentRepo.findOne({ id: commentId });
-    } catch (e) {
-      res.status(404).send({ message: "user or commentId not existed." });
-    }
+    //   await getConnection()
+    //   .createQueryBuilder()
+    //   .update(User)
+    //   .set({good: })
   },
   bad: async (req: Request, res: Response) => {},
 };
