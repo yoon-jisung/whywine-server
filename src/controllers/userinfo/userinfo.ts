@@ -1,25 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import { createQueryBuilder } from "typeorm";
+import { createQueryBuilder, getConnection } from "typeorm";
 import { Tag } from "../../entity/tag";
 import { User } from "../../entity/user";
 import { Comment } from "../../entity/comment";
 import { Wine } from "../../entity/wine";
 
 dotenv.config();
-
-interface userInfo {
-  // verified accessToken의 인터페이스
-  id: number;
-  email: string;
-  nickname: string;
-  likes?: number;
-  image?: string;
-  tags: Tag[];
-  good?: Comment[];
-  bad?: Comment[];
-  wines?: Wine[];
-}
 
 const userinfo = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -28,14 +15,25 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
       .where("id = :id", { id: req.session!.passport!.user })
       .execute();
     if (user.length !== 0) {
+      console.log(user)
+      const connection = await getConnection();
+      let userRepo = connection.getRepository(User)
+      let tagRepo = connection.getRepository(Tag)
+      let commentRepo = connection.getRepository(Comment)
+      let wineRepo = connection.getRepository(Wine)
+
+      const finduser = await userRepo.findOne({ id : req.session!.passport!.user });
+      
+
+
       return res.status(200).send(
         {
           data: {
             id: user[0].User_id,
             email: user[0].User_email,
-            name: user[0].User_name,
-            profileIconURL: user[0].User_profileIconURL,
-            isAdmin: user[0].User_isAdmin
+            nickname: user[0].User_nickname,
+            likes: user[0].User_likes,
+            image: user[0].User_image
           },
           message: "successfully got user info"
         }
@@ -43,11 +41,8 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
     }
   } catch (error) {
     console.error(error.message);
-    if (error.message === "Cannot read property 'user' of undefined") {
-      res.status(401).send({ data: null, message: "not authorized" });
-    } else {
-      res.status(400).send({ data: null, message: error.message })
-    }
+    res.status(401).send({ data: null, message: "not authorized" });
+
   }
 };
 

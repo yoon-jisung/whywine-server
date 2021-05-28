@@ -1,64 +1,37 @@
 import { Request, Response, NextFunction} from 'express';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto'
+import * as bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import { getRepository, getConnection } from "typeorm";
+import { createQueryBuilder } from "typeorm";
 import { User } from "../../entity/user";
 
 dotenv.config();
 
 const password = async (req: Request, res: Response, next: NextFunction) => {
-    //const userRepository = getRepository(User);
-    const {oldPassword, newPassword, accessToken} = req.body
-    interface userInfo {
-        id: number;
-        password: string;
-    }
-
-    const {id, password} = jwt.verify(accessToken,process.env.ACCTOKEN_SECRET!)as userInfo
-    
-    const oldsaltedPassword = oldPassword + process.env.SALT
-    const oldhashPassword = crypto
-    .createHmac('sha512', process.env.CRYPTOKEY!)
-    .update(oldsaltedPassword)
-    .digest('hex');
-    console.log('암호화된 패스워드---', oldhashPassword);
-    
-
-    if(!accessToken){
-        return res
-            .status(401)
-            .json({ message: 'wrong accessToken' })
-    }
-    if(password === oldhashPassword){
-        return res
-            .status(401)
-            .json({ message: 'wrong oldPassword' })
-    }
-    if(newPassword === ''){
-        return res
-            .status(400)
-            .json({ message: 'newPassword is empty' } )
-    }
-
-    const newsaltedPassword = newPassword + process.env.SALT
-    const newHashPassword = crypto
-    .createHmac('sha512', process.env.CRYPTOKEY!)
-    .update(newsaltedPassword)
-    .digest('hex');
-    console.log('새로운 암호화된 패스워드---', newHashPassword);
-    
-    await getConnection()
-        .createQueryBuilder()
-        .update(User)
-        .set({ 
-            password: newHashPassword
-        })
-        .where("id = :id", { id: id })
-        .execute();
-    return res
-        .status(200)
-        .json({ message : 'ok.' })
+    const { oldPassword, newPassword } = req.body
+    try {
+        const user = await createQueryBuilder("user")
+            .where("id = :id", { id: req.session!.passport!.user })
+            .execute();
+        if (user.length !== 0) {
+            if (newPassword !== '') {
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+                if(oldPassword === hashedPassword){
+                    await createQueryBuilder("user")
+                        .update(User)
+                        .set({ password: hashedPassword })
+                        .where({ id: req.session!.passport!.user })
+                        .execute();
+                    return res.status(200).send({ data: null, message: "edit success" });
+                }
+                return res.status(400).send({ data: null, message: "이전 비밀번호가 일치하지 않습니다" });
+            } else {
+                return res.status(400).send({ data: null, message: "비밀번호가 비어있습니다" });
+            }
+        }
+    } catch (error) {
+        console.error(error.message);
+            res.status(401).send({ data: null, message: "not authorized" });
+    };
 }
 
 export default password;
