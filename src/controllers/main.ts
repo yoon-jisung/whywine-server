@@ -18,8 +18,17 @@ const getRandomThree = (sorted: sortedWine): Wine[] => {
     let len = sorted[key].length;
     while (len !== 0 && random3.length < 3) {
       let idx = Math.floor(Math.random() * len);
-      random3 = [...random3, sorted[key][idx]];
-      len--;
+      let isExist = false;
+      for (let el of random3) {
+        if (el.id === sorted[key][idx].id) {
+          isExist = true;
+          break;
+        }
+      }
+      if (!isExist) {
+        random3 = [...random3, sorted[key][idx]];
+        len--;
+      }
     }
   }
   return random3;
