@@ -18,12 +18,16 @@ export default () => {
                 try {
                     console.log(profile)
                     const { _json: { email, name, picture, sub} } = profile;
-                    const userRepository = await getRepository(User);
-                    const findEmail = await userRepository.findOne({ where: { email } });
-                    if(findEmail){
-                        console.log('구글기존 가입자')
-                        return cb(null,findEmail)
+                    
+                    const users = (await createQueryBuilder("user")
+                        .where("email = :email", { email })
+                        .execute());
+                    for (let user of users) {
+                        if (user && user.User_password === null && user.User_email.split('@')[1] === 'gmail.com') {
+                            return cb(null, user)
+                        }
                     }
+                    const userRepository = await getRepository(User);
                     console.log('구글 처음 로그인')
                     const userInfo = new User
                     userInfo.email = email
@@ -32,8 +36,8 @@ export default () => {
                     userInfo.likes = 0
                     userInfo.image = picture
                     const saveData = await userRepository.save(userInfo)
-                    
-                    return cb(null,saveData);
+                    const userId = { User_id: saveData.id }
+                    return cb(null,userId);
                 } catch (error) {
                     console.log('에러',error)
                     return cb(error)
