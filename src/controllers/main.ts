@@ -28,6 +28,7 @@ export = {
   tags: async (req: Request, res: Response) => {
     const connection = getConnection();
     const tags: string[] = req.body.tags;
+    const sort: string[] = req.body.sort;
 
     const wineRepo = await connection.getRepository(Wine);
     const tagRepo = await connection.getRepository(Tag);
@@ -48,6 +49,7 @@ export = {
       .createQueryBuilder("wine")
       .innerJoinAndSelect("wine.tags", "tag")
       .where("tag.name IN (:...name)", { name: tags })
+      .andWhere("sort IN (:...sort)", { sort })
       .getMany();
 
     const sorted: sortedWine = {};
