@@ -18,7 +18,6 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
       console.log('이미 사용중인 아이디로 회원가입 시도 탐지');
       return res.status(403).send({ data: null, message: '이미 사용중인 아이디입니다.' });
     }
-    //bcrypt는 테스트 필요.
     const hashedPassword = await bcrypt.hash(req.body.password, 10); 
     const newUser = await createQueryBuilder("user")
       .insert()
