@@ -23,7 +23,7 @@ export default () => {
                         .where("email = :email", { email })
                         .execute());
                     for (let user of users) {
-                        if (user && user.User_password === null && user.User_email.split('@')[1] === 'gmail.com') {
+                        if (user && user.User_password == sub && user.User_email.split('@')[1] === 'gmail.com') {
                             return cb(null, user)
                         }
                     }

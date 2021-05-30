@@ -17,8 +17,9 @@ export default () => {
             const users = (await createQueryBuilder("user")
             .where("email = :email", { email: "Kakao " + id })
             .execute());
+
             for (let user of users) {
-                if (user && user.User_password === null && user.User_email.split(' ')[0] === 'Kakao') {
+                if (user && user.User_password == id && user.User_email.split(' ')[0] === 'Kakao') {
                     return cb(null, user)
                 }
             }
@@ -27,7 +28,7 @@ export default () => {
             
             
             const userInfo = new User
-            userInfo.email = id
+            userInfo.email = "Kakao " + id
             userInfo.nickname = nickname
             userInfo.password = id
             userInfo.likes = 0
