@@ -21,16 +21,16 @@ export class User {
   @Column()
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Column()
   nickname: string;
 
-  @Column()
+  @Column({ nullable: true })
   likes: number;
 
-  @Column()
+  @Column({ nullable: true })
   image: string;
 
   // 사용자의 선호 태그 join table
