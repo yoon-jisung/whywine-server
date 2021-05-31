@@ -34,6 +34,9 @@ export class Wine {
   @Column()
   sort: string;
 
+  @Column()
+  rating_avg: number;
+
   // 와인에 붙는 태그
   @ManyToMany(() => Tag, (tag) => tag.id)
   @JoinTable({ name: "wine_tag" })
