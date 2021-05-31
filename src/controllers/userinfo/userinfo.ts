@@ -22,7 +22,17 @@ const userinfo = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(200).send(
         {
           data: {
-            userInfo
+            userInfo:{
+              id: userInfo.id,
+              email: userInfo.email,
+              nickname: userInfo.nickname,
+              image: userInfo.image,
+              likes: userInfo.likes,
+              bad: userInfo.bad,
+              good: userInfo.good,
+              tags: userInfo.tags,
+              wines: userInfo.wines,
+            }
           },
           message: "ok"
         }
