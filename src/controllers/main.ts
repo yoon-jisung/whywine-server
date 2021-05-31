@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getConnection, Like } from "typeorm";
 import { Tag } from "../entity/tag";
+import { User } from "../entity/user";
 import { Wine } from "../entity/wine";
 
 interface sortedWine {
@@ -78,13 +79,21 @@ export = {
     }
     const sorted: sortedWine = {};
     for (let wine of wines) {
-      if (sorted[wine.tags.length] === undefined) {
-        sorted[wine.tags.length] = [];
+      let tagLen = wine.tags.length;
+      if (sorted[tagLen] === undefined) {
+        sorted[tagLen] = [];
       }
-      sorted[wine.tags.length].push(wine);
+      let result = await wineRepo.findOne({
+        where: { id: wine.id },
+        relations: ["tags"],
+      });
+      if (result) {
+        sorted[tagLen].push(result);
+      }
     }
 
     sorted["random3"] = getRandomThree(sorted);
+
     res.status(200).send({
       message: "ok.",
       data: {
