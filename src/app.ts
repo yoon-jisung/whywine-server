@@ -4,13 +4,13 @@ import fs from "fs";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import expressSession from 'express-session';
-import passport from 'passport';
+import expressSession from "express-session";
+import passport from "passport";
 import dotenv from "dotenv";
 import { createConnection } from "typeorm";
 import "reflect-metadata";
 
-import passportConfig from './utils/strategy/index';
+import passportConfig from "./utils/strategy/index";
 import indexRouter from "./routers/index";
 import userinfoRouter from "./routers/userinfo";
 import authRouter from "./routers/auth";
@@ -42,21 +42,22 @@ app.use(
   })
 );
 
-
 passportConfig();
-app.use(expressSession({
-  resave: false,
-  saveUninitialized: false,
-  secret: process.env.COOKIE_SECRET!,
-  cookie: {
-      path: '/',
-      sameSite: 'none',
+app.use(
+  expressSession({
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.COOKIE_SECRET!,
+    cookie: {
+      path: "/",
+      sameSite: "none",
       httpOnly: false,
-      secure: true
-  },
-}));
+      secure: true,
+    },
+  })
+);
 app.use(cookieParser());
-app.use(passport.initialize())
+app.use(passport.initialize());
 app.use(passport.session());
 app.use("/", indexRouter);
 app.use("/auth", authRouter);

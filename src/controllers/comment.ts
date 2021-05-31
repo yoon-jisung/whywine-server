@@ -6,6 +6,7 @@ import { Wine } from "../entity/wine";
 import jwt from "jsonwebtoken";
 import { User } from "../entity/user";
 import { Recomment } from "../entity/recomment";
+
 require("dotenv").config();
 interface TokenInterface {
   // verified accessToken의 인터페이스
@@ -172,6 +173,180 @@ export = {
       }
     } else {
       res.status(404).send({ message: "commentId not existed." });
+    }
+  },
+  good: async (req: Request, res: Response) => {
+    try {
+      let commentId;
+      let userId;
+      if (req.body.commentId) {
+        commentId = req.body.commentId;
+      } else {
+        throw new Error("commentId");
+      }
+      // if (req.session!.passport!) {
+      //   userId = req.session!.passport!.user;
+      // } else {
+      //   throw new Error("user");
+      // }
+
+      const connection = getConnection();
+      const userRepo = await connection.getRepository(User);
+      const commentRepo = await connection.getRepository(Comment);
+
+      const user = await userRepo.findOne({
+        where: { id: 4 },
+      }); // 4==>userId
+      const comment = await commentRepo.findOne({ id: commentId });
+
+      if (user) {
+        if (comment) {
+          let result = await userRepo
+            .createQueryBuilder("user")
+            .innerJoinAndSelect("user.good", "good")
+            .where("good.id = :commentId", { commentId })
+            .getOne();
+
+          if (!result) {
+            // 좋아요 추가
+            await connection
+              .createQueryBuilder()
+              .relation(User, "good")
+              .of(user)
+              .add(comment);
+
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ good_count: comment.good_count + 1 })
+              .where("id = :commentId", { commentId })
+              .execute();
+            res.status(200).send({
+              data: { goodCount: comment.good_count + 1 },
+              message: "good button clicked.",
+            });
+          } else {
+            // 좋아요 취소
+            await connection
+              .createQueryBuilder()
+              .relation(User, "good")
+              .of(user)
+              .remove(comment);
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ good_count: comment.good_count - 1 })
+              .where("id = :commentId", { commentId })
+              .execute();
+
+            res.status(200).send({
+              data: { goodCount: comment.good_count - 1 },
+              message: "good button cancelled.",
+            });
+          }
+        } else {
+          throw new Error("comment");
+        }
+      } else {
+        throw new Error("user");
+      }
+    } catch (e) {
+      if (e.message === "user") {
+        res.status(401).send("no user");
+      }
+      if (e.message === "commentId") {
+        res.status(404).send("commentId not existed");
+      }
+      if (e.message === "comment") {
+        res.status(404).send("comment not existed");
+      }
+    }
+  },
+  bad: async (req: Request, res: Response) => {
+    try {
+      let commentId;
+      let userId;
+      if (req.body.commentId) {
+        commentId = req.body.commentId;
+      } else {
+        throw new Error("commentId");
+      }
+      // if (req.session!.passport!) {
+      //   userId = req.session!.passport!.user;
+      // } else {
+      //   throw new Error("user");
+      // }
+
+      const connection = getConnection();
+      const userRepo = await connection.getRepository(User);
+      const commentRepo = await connection.getRepository(Comment);
+
+      const user = await userRepo.findOne({
+        where: { id: 4 },
+      }); // 4==>userId
+      const comment = await commentRepo.findOne({ id: commentId });
+
+      if (user) {
+        if (comment) {
+          let result = await userRepo
+            .createQueryBuilder("user")
+            .innerJoinAndSelect("user.bad", "bad")
+            .where("bad.id = :commentId", { commentId })
+            .getOne();
+
+          if (!result) {
+            // 좋아요 추가
+            await connection
+              .createQueryBuilder()
+              .relation(User, "bad")
+              .of(user)
+              .add(comment);
+
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ bad_count: comment.bad_count + 1 })
+              .where("id = :commentId", { commentId })
+              .execute();
+            res.status(200).send({
+              data: { badCount: comment.bad_count + 1 },
+              message: "bad button clicked.",
+            });
+          } else {
+            // 좋아요 취소
+            await connection
+              .createQueryBuilder()
+              .relation(User, "bad")
+              .of(user)
+              .remove(comment);
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ bad_count: comment.bad_count - 1 })
+              .where("id = :commentId", { commentId })
+              .execute();
+
+            res.status(200).send({
+              data: { badCount: comment.bad_count - 1 },
+              message: "bad button cancelled.",
+            });
+          }
+        } else {
+          throw new Error("comment");
+        }
+      } else {
+        throw new Error("user");
+      }
+    } catch (e) {
+      if (e.message === "user") {
+        res.status(401).send("no user");
+      }
+      if (e.message === "commentId") {
+        res.status(404).send("commentId not existed");
+      }
+      if (e.message === "comment") {
+        res.status(404).send("comment not existed");
+      }
     }
   },
 };
