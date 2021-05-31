@@ -19,7 +19,7 @@ export default () => {
             .execute());
 
             for (let user of users) {
-                if (user && user.User_password == id && user.User_email.split(' ')[0] === 'Kakao') {
+                if (user && user.User_password == null && user.User_email.split(' ')[0] === 'Kakao') {
                     return cb(null, user)
                 }
             }
@@ -30,7 +30,6 @@ export default () => {
             const userInfo = new User
             userInfo.email = "Kakao " + id
             userInfo.nickname = nickname
-            userInfo.password = id
             userInfo.likes = 0
             userInfo.image = profile_image
             const saveData = await userRepository.save(userInfo)
