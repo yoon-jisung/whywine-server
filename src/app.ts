@@ -38,6 +38,7 @@ app.use(
     origin: [client],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS", "DELETE", "PUT"],
+    allowedHeaders: "Content-Type, Authorization",
   })
 );
 
@@ -79,7 +80,26 @@ if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
       console.log("https server on " + port);
     });
 } else {
-  server = app.listen(80, async () => {
-    console.log("http server on " + 80);
+
+  const privateKey = fs.readFileSync(
+    "/etc/letsencrypt/live/server.whywine.co.kr/privkey.pem",
+    "utf8"
+  );
+  const certificate = fs.readFileSync(
+    "/etc/letsencrypt/live/server.whywine.co.kr/cert.pem",
+    "utf8"
+  );
+  const ca = fs.readFileSync(
+      "/etc/letsencrypt/live/server.whywine.co.kr/chain.pem",
+      "utf8"
+  );
+  const credentials = {
+      key: privateKey,
+      cert: certificate,
+      ca: ca,
+  };
+  server = https.createServer(credentials, app);
+  server.listen(port, () => {
+      console.log(`HTTPS Server Running at ${port}`);
   });
 }
