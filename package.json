@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/app.ts",
-    "start": "tsc-watch --onSuccess \" node dist/index.js\"",
+    "start": "tsc-watch --onSuccess \" node dist/src/index.js\"",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
     "data": "npm run typeorm migration:run"
   },
@@ -28,7 +28,6 @@
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
@@ -44,7 +43,6 @@
     "passport-kakao": "^1.0.1",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
-    "pm2": "^4.5.6",
     "reflect-metadata": "^0.1.10",
     "tsc-watch": "^4.4.0",
     "typeorm": "^0.2.32"

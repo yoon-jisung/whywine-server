@@ -32,37 +32,67 @@ interface CommentInterface {
 }
 export = {
   post: async (req: Request, res: Response) => {
-    const connection = getConnection();
-    const userRepo = await connection.getRepository(User);
-    const wineRepo = await connection.getRepository(Wine);
-    const commentRepo = await connection.getRepository(Comment);
-    const { wineId, text } = req.body;
+    try {
+      const connection = getConnection();
+      const userRepo = await connection.getRepository(User);
+      const wineRepo = await connection.getRepository(Wine);
+      const { wineId, text } = req.body;
 
-    const userId: number = req.session!.passport!.user;
+      let userId: number;
 
-    const user = await userRepo.findOne({ id: userId });
-    const wine = await wineRepo.findOne({ id: wineId });
-    if (user === undefined || wine === undefined || text === "") {
-      res
-        .status(404)
-        .send({ message: "text, wineId or accessToken not existed" });
-      return;
-    } else {
-      let comment = new Comment();
-      comment.text = text;
-      comment.user = user;
-      comment.wine = wine;
-      comment.good_count = 0;
-      comment.bad_count = 0;
-      const newComment = await connection.manager.save(comment);
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
 
-      res.status(200).send({
-        data: {
-          newComment,
-        },
-        message: "ok.",
-      });
-      return;
+      if (!wineId) {
+        throw new Error("wineId");
+      }
+
+      if (!text) {
+        throw new Error("text");
+      }
+
+      const user = await userRepo.findOne({ id: userId });
+      const wine = await wineRepo.findOne({ id: wineId });
+      if (!user) {
+        throw new Error("user");
+      } else if (!wine) {
+        throw new Error("wine");
+      } else {
+        let comment = new Comment();
+        comment.text = text;
+        comment.user = user;
+        comment.wine = wine;
+        comment.good_count = 0;
+        comment.bad_count = 0;
+        const newComment = await connection.manager.save(comment);
+
+        res.status(200).send({
+          data: {
+            newComment,
+          },
+          message: "ok.",
+        });
+        return;
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(404).send({ message: "userId not existed" });
+      } else if (e.message === "wineId") {
+        res.status(404).send({ message: "wineId not existed" });
+      } else if (e.message === "text") {
+        res.status(404).send({ message: "text is empty" });
+      } else if (e.message === "user") {
+        res.status(404).send({ message: "user not existed" });
+      } else if (e.message === "wine") {
+        res.status(404).send({ message: "wine not existed" });
+      } else {
+        res
+          .status(404)
+          .send({ message: "text, wineId or accessToken not existed" });
+      }
     }
   },
   get: async (req: Request, res: Response) => {
@@ -149,30 +179,59 @@ export = {
     }
   },
   put: async (req: Request, res: Response) => {
-    const { text, commentId } = req.body;
-    const userId = req.session!.passport!.user;
+    try {
+      const { text, commentId } = req.body;
+      let userId: number;
 
-    const connection = await getConnection();
-    const commentRepo = await connection.getRepository(Comment);
-    const comment = await commentRepo.findOne({
-      where: { id: commentId },
-      relations: ["user"],
-    });
-    if (comment) {
-      if (comment.user.id === userId) {
-        await connection
-          .createQueryBuilder()
-          .update(Comment)
-          .set({ text: text })
-          .where("id = :commentId", { commentId })
-          .execute();
-
-        res.status(200).send({ message: "comment successfully deleted." });
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
       } else {
-        res.status(401).send({ message: "you are unauthorized." });
+        throw new Error("userId");
       }
-    } else {
-      res.status(404).send({ message: "commentId not existed." });
+
+      if (!commentId) {
+        throw new Error("commentId");
+      }
+
+      if (!text || text === "") {
+        throw new Error("text");
+      }
+
+      const connection = await getConnection();
+      const commentRepo = await connection.getRepository(Comment);
+      const comment = await commentRepo.findOne({
+        where: { id: commentId },
+        relations: ["user"],
+      });
+      if (comment) {
+        if (comment.user.id === userId) {
+          //1=>userId
+          await connection
+            .createQueryBuilder()
+            .update(Recomment)
+            .set({ text: text })
+            .where("id = :commentId", { commentId })
+            .execute();
+
+          res.status(200).send({ message: "comment successfully changed." });
+        } else {
+          throw new Error("unauthorized");
+        }
+      } else {
+        throw new Error("comment");
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(404).send({ message: "userId not existed" });
+      } else if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed" });
+      } else if (e.message === "text") {
+        res.status(404).send({ message: "text not existed" });
+      } else if (e.message === "unauthorized") {
+        res.status(401).send({ message: "you are unauthorized." });
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed" });
+      }
     }
   },
   good: async (req: Request, res: Response) => {
@@ -184,18 +243,18 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      // if (req.session!.passport!) {
-      //   userId = req.session!.passport!.user;
-      // } else {
-      //   throw new Error("user");
-      // }
+      if (req.session!.passport!) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("user");
+      }
 
       const connection = getConnection();
       const userRepo = await connection.getRepository(User);
       const commentRepo = await connection.getRepository(Comment);
 
       const user = await userRepo.findOne({
-        where: { id: 4 },
+        where: { id: userId },
       }); // 4==>userId
       const comment = await commentRepo.findOne({ id: commentId });
 
@@ -271,18 +330,18 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      // if (req.session!.passport!) {
-      //   userId = req.session!.passport!.user;
-      // } else {
-      //   throw new Error("user");
-      // }
+      if (req.session!.passport!) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("user");
+      }
 
       const connection = getConnection();
       const userRepo = await connection.getRepository(User);
       const commentRepo = await connection.getRepository(Comment);
 
       const user = await userRepo.findOne({
-        where: { id: 4 },
+        where: { id: userId },
       }); // 4==>userId
       const comment = await commentRepo.findOne({ id: commentId });
 
@@ -346,6 +405,181 @@ export = {
       }
       if (e.message === "comment") {
         res.status(404).send("comment not existed");
+      }
+    }
+  },
+  re_post: async (req: Request, res: Response) => {
+    try {
+      const connection = getConnection();
+      const userRepo = await connection.getRepository(User);
+      const commentRepo = await connection.getRepository(Comment);
+      const { commentId, text } = req.body;
+
+      let userId: number;
+
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
+
+      if (!commentId) {
+        throw new Error("commentId");
+      }
+
+      if (!text || text === "") {
+        throw new Error("text");
+      }
+
+      const user = await userRepo.findOne({ id: userId }); // userId=>1
+      const comment = await commentRepo.findOne({ id: commentId });
+      if (!user) {
+        throw new Error("user");
+      } else if (!comment) {
+        throw new Error("comment");
+      } else {
+        let recomment = new Recomment();
+        recomment.text = text;
+        recomment.comment = comment;
+        recomment.user = user;
+        const newRecomment = await connection.manager.save(recomment);
+        newRecomment.user.password = "";
+        res.status(200).send({
+          data: {
+            newRecomment,
+          },
+          message: "ok.",
+        });
+        return;
+      }
+    } catch (e) {
+      console.log(e.message);
+      if (e.message === "userId") {
+        res.status(404).send({ message: "userId not existed" });
+        return;
+      } else if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed" });
+        return;
+      } else if (e.message === "text") {
+        res.status(401).send({ message: "text is empty" });
+        return;
+      } else if (e.message === "user") {
+        res.status(404).send({ message: "user not existed" });
+        return;
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed" });
+        return;
+      } else {
+        res
+          .status(404)
+          .send({ message: "text, wineId or accessToken not existed" });
+      }
+    }
+  },
+  re_delete: async (req: Request, res: Response) => {
+    try {
+      let commentId: number;
+      let userId: number;
+
+      if (req.body.commentId) {
+        commentId = req.body.commentId;
+      } else {
+        throw new Error("commentId");
+      }
+
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
+
+      const connection = getConnection();
+      const recomment = await connection
+        .getRepository(Recomment)
+        .findOne({ where: { id: commentId }, relations: ["user"] });
+
+      if (recomment) {
+        if (recomment.user.id === userId) {
+          // 1=> userId
+          await connection
+            .createQueryBuilder()
+            .delete()
+            .from(Recomment)
+            .where("id = :commentId", { commentId })
+            .execute();
+
+          res.status(200).send({ message: "comment successfully deleted." });
+        } else {
+          throw new Error("unauthorized");
+        }
+      } else {
+        throw new Error("comment");
+      }
+    } catch (e) {
+      if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed." });
+      } else if (e.message === "userId") {
+        res.status(404).send({ message: "userId not existed." });
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed." });
+      } else if (e.message === "unauthorized") {
+        res.status(401).send({ message: "you are unauthorized." });
+      }
+    }
+  },
+  re_put: async (req: Request, res: Response) => {
+    try {
+      const { text, commentId } = req.body;
+      let userId: number;
+
+      // if (req.session!.passport!.user) {
+      //   userId = req.session!.passport!.user;
+      // } else {
+      //   throw new Error("userId");
+      // }
+
+      if (!commentId) {
+        throw new Error("commentId");
+      }
+
+      if (!text || text === "") {
+        throw new Error("text");
+      }
+
+      const connection = await getConnection();
+      const recommentRepo = await connection.getRepository(Recomment);
+      const comment = await recommentRepo.findOne({
+        where: { id: commentId },
+        relations: ["user"],
+      });
+      if (comment) {
+        if (comment.user.id === 1) {
+          //1=>userId
+          await connection
+            .createQueryBuilder()
+            .update(Recomment)
+            .set({ text: text })
+            .where("id = :commentId", { commentId })
+            .execute();
+
+          res.status(200).send({ message: "comment successfully changed." });
+        } else {
+          throw new Error("unauthorized");
+        }
+      } else {
+        throw new Error("comment");
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(404).send({ message: "userId not existed" });
+      } else if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed" });
+      } else if (e.message === "text") {
+        res.status(404).send({ message: "text not existed" });
+      } else if (e.message === "unauthorized") {
+        res.status(401).send({ message: "you are unauthorized." });
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed" });
       }
     }
   },
