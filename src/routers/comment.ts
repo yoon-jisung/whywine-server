@@ -4,6 +4,18 @@ import controller from "../controllers/comment";
 
 const router = Router();
 
+router.post("/recomment", (req: Request, res: Response) => {
+  controller.re_post(req, res);
+});
+
+router.delete("/recomment", (req: Request, res: Response) => {
+  controller.re_delete(req, res);
+});
+
+router.put("/recomment", (req: Request, res: Response) => {
+  controller.re_put(req, res);
+});
+
 router.post("/good", (req: Request, res: Response) => {
   controller.good(req, res);
 });
