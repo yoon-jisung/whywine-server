@@ -23,7 +23,7 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
       .insert()
       .into(User)
       .values([
-        { email: req.body.email, nickname: req.body.nickname, password: hashedPassword },
+        { email: req.body.email, nickname: req.body.nickname, password: hashedPassword ,likes:0},
       ])
       .execute();
 
