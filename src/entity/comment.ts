@@ -1,11 +1,8 @@
-import { IncomingMessage } from "http";
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  ManyToMany,
-  JoinTable,
   ManyToOne,
 } from "typeorm";
 import { User } from "./user";
@@ -31,4 +28,7 @@ export class Comment {
 
   @Column()
   bad_count: number;
+
+  @Column({ type: "float" })
+  rating: number;
 }

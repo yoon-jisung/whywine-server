@@ -1,4 +1,3 @@
-import { IncomingMessage } from "http";
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -34,7 +33,7 @@ export class Wine {
   @Column()
   sort: string;
 
-  @Column()
+  @Column({ type: "float" })
   rating_avg: number;
 
   // 와인에 붙는 태그
