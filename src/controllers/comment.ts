@@ -16,6 +16,7 @@ interface CommentInterface {
   good_count: number;
   bad_count: number;
   recomments?: Recomment[];
+  rating?: number;
 }
 export = {
   post: async (req: Request, res: Response) => {
@@ -23,7 +24,8 @@ export = {
       const connection = getConnection();
       const userRepo = await connection.getRepository(User);
       const wineRepo = await connection.getRepository(Wine);
-      const { wineId, text } = req.body;
+      const commentRepo = await connection.getRepository(Comment);
+      const { wineId, text, rating } = req.body;
 
       let userId: number;
 
@@ -41,20 +43,38 @@ export = {
         throw new Error("text");
       }
 
-      const user = await userRepo.findOne({ id: userId });
+      if (!rating) {
+        throw new Error("rating");
+      }
+
+      const user = await userRepo.findOne({ id: userId }); // 3 => userId
       const wine = await wineRepo.findOne({ id: wineId });
       if (!user) {
         throw new Error("user");
       } else if (!wine) {
         throw new Error("wine");
       } else {
+        // 와인 rating_avg 갱신
+        const comments = await commentRepo.find({
+          where: { wine: wineId },
+        });
+        let newRatingAvg = (wine.rating_avg + rating) / (comments.length + 1);
+        await connection
+          .createQueryBuilder()
+          .update(Wine)
+          .set({ rating_avg: newRatingAvg })
+          .where("id = :wineId", { wineId })
+          .execute();
+
+        // 새로운 코멘트 저장
         let comment = new Comment();
         comment.text = text;
         comment.user = user;
         comment.wine = wine;
         comment.good_count = 0;
         comment.bad_count = 0;
-        const newComment = await connection.manager.save(comment);
+        comment.rating = rating;
+        const newComment = await commentRepo.save(comment);
 
         res.status(200).send({
           data: {
@@ -71,6 +91,8 @@ export = {
         res.status(404).send({ message: "wineId not existed" });
       } else if (e.message === "text") {
         res.status(404).send({ message: "text is empty" });
+      } else if (e.message === "rating") {
+        res.status(404).send({ message: "rating is empty" });
       } else if (e.message === "user") {
         res.status(404).send({ message: "user not existed" });
       } else if (e.message === "wine") {
@@ -96,51 +118,40 @@ export = {
         relations: ["good", "bad"],
       });
       const wine = await wineRepo.findOne({ id: wineId });
-
-      if (!user) {
-        throw new Error("user");
+      if (user && wine) {
+        let comments: Comment[] = await commentRepo.find({
+          where: { wine: wineId },
+          relations: ["user", "wine"],
+        });
+        let results: CommentInterface[] = [];
+        for (let c of comments) {
+          let res: CommentInterface = {
+            id: c.id,
+            text: c.text,
+            userId: c.user.id,
+            wineId: c.wine.id,
+            good_count: c.good_count,
+            bad_count: c.bad_count,
+            rating: c.rating,
+            recomments: await recommentRepo.find({ where: { comment: c.id } }),
+          };
+          results.push(res);
+        }
+        const usersgood: number[] = user.good.map((comment) => comment.id);
+        const usersbad: number[] = user.bad.map((comment) => comment.id);
+        res.status(200).send({
+          data: {
+            comments: results,
+            usersgood,
+            usersbad,
+          },
+          message: "ok.",
+        });
+      } else {
+        throw new Error();
       }
-      if (!wine) {
-        throw new Error("wine");
-      }
-
-      let comments: Comment[] = await commentRepo.find({
-        where: { wine: wineId },
-        relations: ["user", "wine"],
-      });
-
-      let results: CommentInterface[] = [];
-
-      for (let c of comments) {
-        let res: CommentInterface = {
-          id: c.id,
-          text: c.text,
-          userId: c.user.id,
-          wineId: c.wine.id,
-          good_count: c.good_count,
-          bad_count: c.bad_count,
-          recomments: await recommentRepo.find({
-            where: { comment: c.id },
-          }),
-        };
-        results.push(res);
-      }
-      const usersgood: number[] = user.good.map((comment) => comment.id);
-      const usersbad: number[] = user.bad.map((comment) => comment.id);
-      res.status(200).send({
-        data: {
-          comments: results,
-          usersgood,
-          usersbad,
-        },
-        message: "ok.",
-      });
-    } catch (e) {
-      if (e.message === "user") {
-        res.status(404).send({ message: "user not existed" });
-      } else if (e.message === "wine") {
-        res.status(404).send({ message: "wine not existed" });
-      }
+    } catch (err) {
+      res.status(404).send({ message: "wineId or accessToken not found." });
     }
   },
   delete: async (req: Request, res: Response) => {
@@ -202,7 +213,7 @@ export = {
   },
   put: async (req: Request, res: Response) => {
     try {
-      const { text, commentId } = req.body;
+      const { text, commentId, rating } = req.body;
       let userId: number;
 
       if (req.session!.passport!.user) {
@@ -215,8 +226,8 @@ export = {
         throw new Error("commentId");
       }
 
-      if (!text || text === "") {
-        throw new Error("text");
+      if (!text && !rating) {
+        throw new Error("text&&rating");
       }
 
       const connection = await getConnection();
@@ -227,13 +238,22 @@ export = {
       });
       if (comment) {
         if (comment.user.id === userId) {
-          //1=>userId
-          await connection
-            .createQueryBuilder()
-            .update(Recomment)
-            .set({ text: text })
-            .where("id = :commentId", { commentId })
-            .execute();
+          if (text) {
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ text: text })
+              .where("id = :commentId", { commentId })
+              .execute();
+          }
+          if (rating) {
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ rating: rating })
+              .where("id = :commentId", { commentId })
+              .execute();
+          }
 
           res.status(200).send({ message: "comment successfully changed." });
         } else {
@@ -247,8 +267,8 @@ export = {
         res.status(404).send({ message: "userId not existed" });
       } else if (e.message === "commentId") {
         res.status(404).send({ message: "commentId not existed" });
-      } else if (e.message === "text") {
-        res.status(404).send({ message: "text not existed" });
+      } else if (e.message === "text&&rating") {
+        res.status(404).send({ message: "text and rating not existed" });
       } else if (e.message === "unauthorized") {
         res.status(401).send({ message: "you are unauthorized." });
       } else if (e.message === "comment") {
