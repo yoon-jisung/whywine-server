@@ -77,6 +77,7 @@ export = {
         .andWhere("sort IN (:...sort)", { sort })
         .getMany();
     }
+
     const sorted: sortedWine = {};
     for (let wine of wines) {
       let tagLen = wine.tags.length;

@@ -75,7 +75,7 @@ export = {
     try {
       let wineId: number;
       let userId: number;
-
+      console.log(req.session!.passport!.user);
       if (req.session!.passport!) {
         userId = req.session!.passport!.user;
       } else {
