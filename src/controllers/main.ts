@@ -106,9 +106,14 @@ export = {
     return;
   },
   search: async (req: Request, res: Response) => {
-    const word = req.query.word;
-    const connection = getConnection();
+    let word;
+    if (req.query.word) {
+      word = String(req.query.word);
+    } else {
+      res.status(404).send({ message: "word not existed" });
+    }
 
+    const connection = getConnection();
     const wineRepo = await connection.getRepository(Wine);
 
     let searchResult: Wine[] = await wineRepo

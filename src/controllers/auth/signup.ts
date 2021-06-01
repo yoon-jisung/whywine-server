@@ -13,7 +13,7 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
 
       .where("email = :email", { email: req.body.email })
       .execute();
-    console.log(exUser);// 성공시 []가 뜬다.
+    console.log(exUser);
     if (exUser.length !== 0) {
       console.log('이미 사용중인 아이디로 회원가입 시도 탐지');
       return res.status(403).send({ data: null, message: '이미 사용중인 아이디입니다.' });
@@ -23,7 +23,7 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
       .insert()
       .into(User)
       .values([
-        { email: req.body.email, nickname: req.body.nickname, password: hashedPassword,likes:0,image:'' },
+        { email: req.body.email, nickname: req.body.nickname, password: hashedPassword ,likes:0},
       ])
       .execute();
 

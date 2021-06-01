@@ -3,23 +3,10 @@ import { getConnection } from "typeorm";
 import { Comment } from "../entity/comment";
 import { Tag } from "../entity/tag";
 import { Wine } from "../entity/wine";
-import jwt from "jsonwebtoken";
 import { User } from "../entity/user";
 import { Recomment } from "../entity/recomment";
 
 require("dotenv").config();
-interface TokenInterface {
-  // verified accessToken의 인터페이스
-  id: number;
-  email: string;
-  nickname: string;
-  likes?: number;
-  image?: Buffer;
-  tags: Tag[];
-  good?: Comment[];
-  bad?: Comment[];
-  wines?: Wine[];
-}
 
 interface CommentInterface {
   id: number;
@@ -29,6 +16,7 @@ interface CommentInterface {
   good_count: number;
   bad_count: number;
   recomments?: Recomment[];
+  rating?: number;
 }
 export = {
   post: async (req: Request, res: Response) => {
@@ -36,7 +24,8 @@ export = {
       const connection = getConnection();
       const userRepo = await connection.getRepository(User);
       const wineRepo = await connection.getRepository(Wine);
-      const { wineId, text } = req.body;
+      const commentRepo = await connection.getRepository(Comment);
+      const { wineId, text, rating } = req.body;
 
       let userId: number;
 
@@ -54,20 +43,38 @@ export = {
         throw new Error("text");
       }
 
-      const user = await userRepo.findOne({ id: userId });
+      if (!rating) {
+        throw new Error("rating");
+      }
+
+      const user = await userRepo.findOne({ id: userId }); // 3 => userId
       const wine = await wineRepo.findOne({ id: wineId });
       if (!user) {
         throw new Error("user");
       } else if (!wine) {
         throw new Error("wine");
       } else {
+        // 와인 rating_avg 갱신
+        const comments = await commentRepo.find({
+          where: { wine: wineId },
+        });
+        let newRatingAvg = (wine.rating_avg + rating) / (comments.length + 1);
+        await connection
+          .createQueryBuilder()
+          .update(Wine)
+          .set({ rating_avg: newRatingAvg })
+          .where("id = :wineId", { wineId })
+          .execute();
+
+        // 새로운 코멘트 저장
         let comment = new Comment();
         comment.text = text;
         comment.user = user;
         comment.wine = wine;
         comment.good_count = 0;
         comment.bad_count = 0;
-        const newComment = await connection.manager.save(comment);
+        comment.rating = rating;
+        const newComment = await commentRepo.save(comment);
 
         res.status(200).send({
           data: {
@@ -84,14 +91,14 @@ export = {
         res.status(404).send({ message: "wineId not existed" });
       } else if (e.message === "text") {
         res.status(404).send({ message: "text is empty" });
+      } else if (e.message === "rating") {
+        res.status(404).send({ message: "rating is empty" });
       } else if (e.message === "user") {
         res.status(404).send({ message: "user not existed" });
       } else if (e.message === "wine") {
         res.status(404).send({ message: "wine not existed" });
       } else {
-        res
-          .status(404)
-          .send({ message: "text, wineId or accessToken not existed" });
+        res.status(404).send({ message: "something wrong" });
       }
     }
   },
@@ -125,6 +132,7 @@ export = {
             wineId: c.wine.id,
             good_count: c.good_count,
             bad_count: c.bad_count,
+            rating: c.rating,
             recomments: await recommentRepo.find({ where: { comment: c.id } }),
           };
           results.push(res);
@@ -147,40 +155,65 @@ export = {
     }
   },
   delete: async (req: Request, res: Response) => {
-    const commentId = req.body.commentId;
-    const userId = req.session!.passport!.user;
+    try {
+      let commentId: number;
+      let userId: number;
 
-    const connection = getConnection();
-    const comment = await connection
-      .getRepository(Comment)
-      .findOne({ where: { id: commentId }, relations: ["user"] });
-    if (comment) {
-      if (comment.user.id === userId) {
-        await connection
-          .createQueryBuilder()
-          .delete()
-          .from(Recomment)
-          .where("comment = :commentId", { commentId })
-          .execute();
-
-        await connection
-          .createQueryBuilder()
-          .delete()
-          .from(Comment)
-          .where("id = :commentId", { commentId })
-          .execute();
-
-        res.status(200).send({ message: "comment successfully deleted." });
+      if (req.session.passport) {
+        userId = req.session.passport.user;
       } else {
-        res.status(401).send({ message: "you are unauthorized." });
+        throw new Error("userId");
       }
-    } else {
-      res.status(404).send({ message: "commentId not existed." });
+
+      if (req.body.commentId) {
+        commentId = req.body.commentId;
+      } else {
+        throw new Error("commentId");
+      }
+
+      const connection = await getConnection();
+      const comment = await connection
+        .getRepository(Comment)
+        .findOne({ where: { id: commentId }, relations: ["user"] });
+
+      if (comment) {
+        if (comment.user.id === userId) {
+          await connection
+            .createQueryBuilder()
+            .delete()
+            .from(Recomment)
+            .where("comment = :commentId", { commentId })
+            .execute();
+
+          await connection
+            .createQueryBuilder()
+            .delete()
+            .from(Comment)
+            .where("id = :commentId", { commentId })
+            .execute();
+
+          res.status(200).send({ message: "comment successfully deleted." });
+        } else {
+          throw new Error("user");
+        }
+      } else {
+        throw new Error("comment");
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(401).send({ message: "you are unauthorized." });
+      } else if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed." });
+      } else if (e.message === "user") {
+        res.status(401).send({ message: "you are not writer." });
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed." });
+      }
     }
   },
   put: async (req: Request, res: Response) => {
     try {
-      const { text, commentId } = req.body;
+      const { text, commentId, rating } = req.body;
       let userId: number;
 
       if (req.session!.passport!.user) {
@@ -193,8 +226,8 @@ export = {
         throw new Error("commentId");
       }
 
-      if (!text || text === "") {
-        throw new Error("text");
+      if (!text && !rating) {
+        throw new Error("text&&rating");
       }
 
       const connection = await getConnection();
@@ -205,13 +238,22 @@ export = {
       });
       if (comment) {
         if (comment.user.id === userId) {
-          //1=>userId
-          await connection
-            .createQueryBuilder()
-            .update(Recomment)
-            .set({ text: text })
-            .where("id = :commentId", { commentId })
-            .execute();
+          if (text) {
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ text: text })
+              .where("id = :commentId", { commentId })
+              .execute();
+          }
+          if (rating) {
+            await connection
+              .createQueryBuilder()
+              .update(Comment)
+              .set({ rating: rating })
+              .where("id = :commentId", { commentId })
+              .execute();
+          }
 
           res.status(200).send({ message: "comment successfully changed." });
         } else {
@@ -225,8 +267,8 @@ export = {
         res.status(404).send({ message: "userId not existed" });
       } else if (e.message === "commentId") {
         res.status(404).send({ message: "commentId not existed" });
-      } else if (e.message === "text") {
-        res.status(404).send({ message: "text not existed" });
+      } else if (e.message === "text&&rating") {
+        res.status(404).send({ message: "text and rating not existed" });
       } else if (e.message === "unauthorized") {
         res.status(401).send({ message: "you are unauthorized." });
       } else if (e.message === "comment") {
@@ -243,7 +285,7 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      if (req.session!.passport!) {
+      if (req.session!.passport!.user) {
         userId = req.session!.passport!.user;
       } else {
         throw new Error("user");
@@ -330,7 +372,7 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      if (req.session!.passport!) {
+      if (req.session!.passport!.user) {
         userId = req.session!.passport!.user;
       } else {
         throw new Error("user");
@@ -532,11 +574,11 @@ export = {
       const { text, commentId } = req.body;
       let userId: number;
 
-      // if (req.session!.passport!.user) {
-      //   userId = req.session!.passport!.user;
-      // } else {
-      //   throw new Error("userId");
-      // }
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
 
       if (!commentId) {
         throw new Error("commentId");
@@ -553,7 +595,7 @@ export = {
         relations: ["user"],
       });
       if (comment) {
-        if (comment.user.id === 1) {
+        if (comment.user.id === userId) {
           //1=>userId
           await connection
             .createQueryBuilder()
