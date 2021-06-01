@@ -5,7 +5,6 @@ import { Tag } from "../entity/tag";
 import { User } from "../entity/user";
 import { Comment } from "../entity/comment";
 import { Wine } from "../entity/wine";
-import jwt from "jsonwebtoken";
 require("dotenv").config();
 
 export = {
