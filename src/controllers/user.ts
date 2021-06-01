@@ -118,40 +118,49 @@ export = {
     }
   },
   unlike: async (req: Request, res: Response) => {
-    interface TokenInterface {
-      // verified accessToken의 인터페이스
-      id: number;
-      email: string;
-      nickname: string;
-      likes?: number;
-      image?: Buffer;
-      tags: Tag[];
-      good?: Comment[];
-      bad?: Comment[];
-      wines?: Wine[];
-    }
-    const wineId: number = req.body.wineId;
-    const accessToken: string = req.body.accessToken;
-    const userinfo = jwt.verify(
-      accessToken,
-      process.env.ACCTOKEN_SECRET!
-    ) as TokenInterface;
+    try {
+      let wineId: number;
+      let userId: number;
 
-    const connection = await getConnection(); // 데이터베이스와 연결
-    const wineRepo = await connection.getRepository(Wine);
-    const userRepo = await connection.getRepository(User);
+      if (req.session!.passport!) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
+      if (req.body.wineId) {
+        wineId = req.body.wineId;
+      } else {
+        throw new Error("wineId");
+      }
 
-    const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
-    const user: User | undefined = await userRepo.findOne({ id: userinfo.id });
+      const connection = await getConnection(); // 데이터베이스와 연결
+      const wineRepo = await connection.getRepository(Wine);
+      const userRepo = await connection.getRepository(User);
 
-    if (!userinfo || !user) {
-      res.status(401).send({ message: "accessToken not existed" });
-    } else if (wine === undefined || !wine) {
-      res.status(404).send({ message: "wine not existed" });
-    } else {
-      user.wines = await user.wines.filter((wine) => wineId === wine.id);
-      await userRepo.save(user);
-      res.status(200).send({ message: "ok" });
+      const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
+      const user: User | undefined = await userRepo.findOne({ id: userId }); // 2=>userId
+      if (wine && user) {
+        await connection
+          .createQueryBuilder()
+          .relation(User, "wines")
+          .of(user)
+          .remove(wineId);
+        res.status(200).send({ message: "ok" });
+      } else if (!user) {
+        throw new Error("user");
+      } else if (!wine) {
+        throw new Error("wine");
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(401).send({ message: "you are unauthorized" });
+      } else if (e.message === "wineId") {
+        res.status(404).send({ message: "wineId not existed" });
+      } else if (e.message === "user") {
+        res.status(404).send({ message: "user not existed" });
+      } else if (e.message === "wine") {
+        res.status(404).send({ message: "wine not existed" });
+      }
     }
   },
 };
