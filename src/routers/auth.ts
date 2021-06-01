@@ -9,7 +9,7 @@ const { signup, signin, sociallogin, logout } = require("../controllers/auth");
 
 router.post("/signup", signup);
 router.post("/signin", signin);
-router.post("/logout", logout);
+router.get("/logout", logout);
 
 router.get("/kakao", passport.authenticate('kakao', { scope: ['profile','account_email'] }));
 router.get("/kakao/callback", passport.authenticate('kakao',{ failureRedirect: `${client}`}), sociallogin);
