@@ -21,9 +21,9 @@ const password = async (req: Request, res: Response, next: NextFunction) => {
                         .set({ password: hashedPassword })
                         .where({ id: req.session!.passport!.user })
                         .execute();
-                    return res.status(200).send({ data: null, message: "edit success" });
+                    return res.status(200).send({ data: null, message: "ok" });
                 }
-                return res.status(400).send({ data: null, message: "이전 비밀번호가 일치하지 않습니다" });
+                return res.status(409).send({ data: null, message: "이전 비밀번호가 일치하지 않습니다" });
             } else {
                 return res.status(400).send({ data: null, message: "비밀번호가 비어있습니다" });
             }

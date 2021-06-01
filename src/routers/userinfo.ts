@@ -12,7 +12,7 @@ import upload from "../utils/upload";
 router.get("/", userinfo);
 router.post("/nickname", nickname);
 router.post("/password", password);
-router.get("/leave", leave);
+router.delete("/leave", leave);
 router.get("/upload", upload.single("img"));
 
 export default router;

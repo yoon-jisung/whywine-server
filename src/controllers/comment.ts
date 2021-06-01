@@ -3,7 +3,6 @@ import { getConnection } from "typeorm";
 import { Comment } from "../entity/comment";
 import { Tag } from "../entity/tag";
 import { Wine } from "../entity/wine";
-import jwt from "jsonwebtoken";
 import { User } from "../entity/user";
 import { Recomment } from "../entity/recomment";
 
@@ -99,9 +98,7 @@ export = {
       } else if (e.message === "wine") {
         res.status(404).send({ message: "wine not existed" });
       } else {
-        res
-          .status(404)
-          .send({ message: "text, wineId or accessToken not existed" });
+        res.status(404).send({ message: "something wrong" });
       }
     }
   },
@@ -158,35 +155,60 @@ export = {
     }
   },
   delete: async (req: Request, res: Response) => {
-    const commentId = req.body.commentId;
-    const userId = req.session!.passport!.user;
+    try {
+      let commentId: number;
+      let userId: number;
 
-    const connection = getConnection();
-    const comment = await connection
-      .getRepository(Comment)
-      .findOne({ where: { id: commentId }, relations: ["user"] });
-    if (comment) {
-      if (comment.user.id === userId) {
-        await connection
-          .createQueryBuilder()
-          .delete()
-          .from(Recomment)
-          .where("comment = :commentId", { commentId })
-          .execute();
-
-        await connection
-          .createQueryBuilder()
-          .delete()
-          .from(Comment)
-          .where("id = :commentId", { commentId })
-          .execute();
-
-        res.status(200).send({ message: "comment successfully deleted." });
+      if (req.session.passport) {
+        userId = req.session.passport.user;
       } else {
-        res.status(401).send({ message: "you are unauthorized." });
+        throw new Error("userId");
       }
-    } else {
-      res.status(404).send({ message: "commentId not existed." });
+
+      if (req.body.commentId) {
+        commentId = req.body.commentId;
+      } else {
+        throw new Error("commentId");
+      }
+
+      const connection = await getConnection();
+      const comment = await connection
+        .getRepository(Comment)
+        .findOne({ where: { id: commentId }, relations: ["user"] });
+
+      if (comment) {
+        if (comment.user.id === userId) {
+          await connection
+            .createQueryBuilder()
+            .delete()
+            .from(Recomment)
+            .where("comment = :commentId", { commentId })
+            .execute();
+
+          await connection
+            .createQueryBuilder()
+            .delete()
+            .from(Comment)
+            .where("id = :commentId", { commentId })
+            .execute();
+
+          res.status(200).send({ message: "comment successfully deleted." });
+        } else {
+          throw new Error("user");
+        }
+      } else {
+        throw new Error("comment");
+      }
+    } catch (e) {
+      if (e.message === "userId") {
+        res.status(401).send({ message: "you are unauthorized." });
+      } else if (e.message === "commentId") {
+        res.status(404).send({ message: "commentId not existed." });
+      } else if (e.message === "user") {
+        res.status(401).send({ message: "you are not writer." });
+      } else if (e.message === "comment") {
+        res.status(404).send({ message: "comment not existed." });
+      }
     }
   },
   put: async (req: Request, res: Response) => {
@@ -263,7 +285,7 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      if (req.session!.passport!) {
+      if (req.session!.passport!.user) {
         userId = req.session!.passport!.user;
       } else {
         throw new Error("user");
@@ -350,7 +372,7 @@ export = {
       } else {
         throw new Error("commentId");
       }
-      if (req.session!.passport!) {
+      if (req.session!.passport!.user) {
         userId = req.session!.passport!.user;
       } else {
         throw new Error("user");
@@ -552,11 +574,11 @@ export = {
       const { text, commentId } = req.body;
       let userId: number;
 
-      // if (req.session!.passport!.user) {
-      //   userId = req.session!.passport!.user;
-      // } else {
-      //   throw new Error("userId");
-      // }
+      if (req.session!.passport!.user) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
 
       if (!commentId) {
         throw new Error("commentId");
@@ -573,7 +595,7 @@ export = {
         relations: ["user"],
       });
       if (comment) {
-        if (comment.user.id === 1) {
+        if (comment.user.id === userId) {
           //1=>userId
           await connection
             .createQueryBuilder()
