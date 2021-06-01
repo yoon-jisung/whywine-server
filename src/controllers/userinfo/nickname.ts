@@ -14,15 +14,18 @@ const nickname = async (req: Request, res: Response, next: NextFunction) => {
             .where("id = :id", { id: req.session!.passport!.user })
             .execute();
         if (user.length !== 0) {
-            if (newNickname !== '') {
+            if (newNickname !== user[0].nickname && newNickname !== '') {
             await createQueryBuilder("user")
                 .update(User)
-                .set({ name: req.body.name })
+                .set({ nickname: newNickname })
                 .where({ id: req.session!.passport!.user })
                 .execute();
-                return res.status(200).send({ data: null, message: "edit success" });
+                return res.status(200).send({ data: null, message: "ok" });
+            }
+            if(newNickname === ''){
+                return res.status(400).send({ data: null, message: "바꿀 닉네임이 없습니다" });
             } 
-            return res.status(400).send({ data: null, message: "바꿀 닉네임이 없습니다" });
+            return res.status(400).send({ data: null, message: "이전 닉네임과 같습니다" });
         }
     } catch (error) {
         console.error(error.message);

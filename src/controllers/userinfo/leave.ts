@@ -15,7 +15,7 @@ const leave = async (req: Request, res: Response, next: NextFunction) => {
             } catch (e) {
                 return res.status(400).send({
                     data: null,
-                    message: "password required"
+                    message: 'deleted'
                 })
             }
             if (result) {
