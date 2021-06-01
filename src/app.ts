@@ -24,7 +24,7 @@ dotenv.config();
 
 const port: number = 4000;
 const app: Application = express();
-const client = process.env.CLIENT || "https://localhost:3000";
+const client: string = process.env.CLIENT!
 
 const connection = createConnection(ormconfig);
 
@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(
   cors({
-    origin: [client],
+    origin: [client,"https://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS", "DELETE", "PUT"],
     allowedHeaders: "Content-Type, Authorization",
