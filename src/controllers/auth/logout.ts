@@ -5,7 +5,7 @@ const logout = async (req: Request, res: Response) => {
     req.logout();
     if (req.session) {
     req.session.destroy((err) => {
-        res.clearCookie('whywine');
+        res.clearCookie('connect.sid');
         res.send({ data: null, message: 'logout success' });
     });
     } else {
