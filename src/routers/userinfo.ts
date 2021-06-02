@@ -41,7 +41,7 @@ const upload = multer({
 router.get("/", userinfo);
 router.post("/nickname", nickname);
 router.post("/password", password);
-router.get("/leave", leave);
-router.post("/upload", upload.single("img"), profileImage.upload);
+router.delete("/leave", leave);
+router.get("/upload", upload.single("img"), profileImage.upload);
 
 export default router;
