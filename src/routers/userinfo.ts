@@ -24,16 +24,13 @@ const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: "whywine-image",
+    acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
     metadata: function (req: any, file: any, cb: any) {
-      // s3에 넘길 metadata object
-      cb(null, {
-        fieldName: file.fieldname,
-        ContentType: "image/" + file.originalname.split(".")[1],
-      });
+      cb(null, Object.assign({}, req.body));
     },
     key: function (req: any, file: any, cb: any) {
-      // 파일 이름
-      cb(null, "user/" + file.originalname);
+      cb(null, "user/" + String(Date.now()));
     },
   }),
 });
@@ -42,6 +39,6 @@ router.get("/", userinfo);
 router.post("/nickname", nickname);
 router.post("/password", password);
 router.delete("/leave", leave);
-router.get("/upload", upload.single("img"), profileImage.upload);
+router.post("/profileimage", upload.single("image"), profileImage.upload);
 
 export default router;
