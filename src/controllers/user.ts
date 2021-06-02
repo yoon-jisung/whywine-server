@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { getConnection } from "typeorm";
-import ormconfig from "../../ormconfig";
 import { Tag } from "../entity/tag";
 import { User } from "../entity/user";
-import { Comment } from "../entity/comment";
 import { Wine } from "../entity/wine";
 require("dotenv").config();
 
@@ -93,6 +91,12 @@ export = {
       const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
       const user: User | undefined = await userRepo.findOne({ id: userId }); // 2=>userId
       if (wine && user) {
+        await wineRepo
+          .createQueryBuilder()
+          .update(Wine)
+          .set({ likeCount: () => "likeCount+1" })
+          .where("id = :wineId", { wineId })
+          .execute();
         await connection
           .createQueryBuilder()
           .relation(User, "wines")
@@ -144,6 +148,12 @@ export = {
           .relation(User, "wines")
           .of(user)
           .remove(wineId);
+        await connection
+          .createQueryBuilder()
+          .update(Wine)
+          .set({ likeCount: () => "likeCount-1" })
+          .where("id = :wineId", { wineId })
+          .execute();
         res.status(200).send({ message: "ok" });
       } else if (!user) {
         throw new Error("user");
