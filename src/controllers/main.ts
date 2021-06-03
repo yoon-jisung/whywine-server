@@ -105,24 +105,52 @@ export = {
     return;
   },
   search: async (req: Request, res: Response) => {
-    let word;
+    let word: string;
     if (req.query.word) {
       word = String(req.query.word);
+      if (word.length < 2) {
+        res.status(404).send({ message: "search word is too short." });
+        return;
+      }
     } else {
       res.status(404).send({ message: "word not existed" });
+      return;
     }
 
     const connection = getConnection();
     const wineRepo = await connection.getRepository(Wine);
 
-    let searchResult: Wine[] = await wineRepo
-      .createQueryBuilder("wine")
-      .innerJoinAndSelect("wine.tags", "tag")
-      .where("tag.name like :word", { word: `%${word}%` })
-      .orWhere("wine.name like :word", { word: `%${word}%` })
-      .orWhere("wine.sort like :word", { word: `%${word}%` })
-      .orWhere("wine.description like :word", { word: `%${word}%` })
-      .getMany();
+    const tags: object = {
+      body_light: "가벼운",
+      body_bold: "무거운",
+      tannins_smooth: "부드러운",
+      tannins_tannic: "떫은",
+      acidity_soft: "산미가 적은",
+      acidity_acidic: "산미가 높은",
+      sweetness_dry: "씁쓸한",
+      sweetness_sweet: "달달한",
+    };
+
+    let searchResult: Wine[];
+    if (word === "wine" || word === "와인") {
+      searchResult = await wineRepo.find();
+    } else if (Object.values(tags).findIndex((el) => word === el) !== -1) {
+      let idx = Object.values(tags).findIndex((el) => el === word);
+      let key = Object.keys(tags)[idx];
+      searchResult = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("tag.name = :key", { key })
+        .getMany();
+    } else {
+      searchResult = await wineRepo
+        .createQueryBuilder("wine")
+        .innerJoinAndSelect("wine.tags", "tag")
+        .where("wine.name like :word", { word: `%${word}%` })
+        .orWhere("wine.sort like :word", { word: `%${word}%` })
+        .orWhere("wine.description like :word", { word: `%${word}%` })
+        .getMany();
+    }
 
     if (searchResult.length === 0 || !searchResult) {
       res.status(204).send({ message: "search not existed" });
