@@ -4,6 +4,8 @@ import {
   Column,
   OneToMany,
   ManyToOne,
+  UpdateDateColumn,
+  CreateDateColumn,
 } from "typeorm";
 import { User } from "./user";
 import { Wine } from "./wine";
@@ -31,4 +33,10 @@ export class Comment {
 
   @Column({ type: "float" })
   rating: number;
+
+  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  updatedAt?: Date;
+
+  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  createdAt?: Date;
 }
