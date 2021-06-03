@@ -126,13 +126,13 @@ export = {
       const wineId: number = Number(req.query.wineid);
       let userId: number;
 
-      // if (req.session.passport) {
-      //   userId = req.session!.passport!.user;
-      // } else {
-      //   throw new Error("userId");
-      // }
+      if (req.session.passport) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
       const user = await userRepo.findOne({
-        where: { id: 3 }, // 3=>userId
+        where: { id: userId }, // 3=>userId
         relations: ["good", "bad"],
       });
       const wine = await wineRepo.findOne({ id: wineId });
