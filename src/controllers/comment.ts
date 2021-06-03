@@ -5,18 +5,31 @@ import { Tag } from "../entity/tag";
 import { Wine } from "../entity/wine";
 import { User } from "../entity/user";
 import { Recomment } from "../entity/recomment";
+import { report } from "../routers/image";
 
 require("dotenv").config();
 
 interface CommentInterface {
   id: number;
   text: string;
-  userId?: number;
+  user?: UserInterface;
   wineId?: number;
   good_count: number;
   bad_count: number;
-  recomments?: Recomment[];
+  recomments?: RecommentInterface[];
   rating?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+interface RecommentInterface {
+  id: number;
+  text: string;
+  user: UserInterface;
+}
+interface UserInterface {
+  id: number;
+  nickname: string;
+  image: string;
 }
 export = {
   post: async (req: Request, res: Response) => {
@@ -111,10 +124,15 @@ export = {
       const recommentRepo = await connection.getRepository(Recomment);
 
       const wineId: number = Number(req.query.wineid);
-      const userId: number = req.session!.passport!.user;
+      let userId: number;
 
+      if (req.session.passport) {
+        userId = req.session!.passport!.user;
+      } else {
+        throw new Error("userId");
+      }
       const user = await userRepo.findOne({
-        where: { id: userId },
+        where: { id: userId }, // 3=>userId
         relations: ["good", "bad"],
       });
       const wine = await wineRepo.findOne({ id: wineId });
@@ -125,15 +143,43 @@ export = {
         });
         let results: CommentInterface[] = [];
         for (let c of comments) {
+          let user: UserInterface = {
+            id: c.user.id,
+            nickname: c.user.nickname,
+            image: c.user.image,
+          };
+          let recomments: RecommentInterface[] = [];
+          let result = (
+            await recommentRepo.find({
+              where: { comment: c.id },
+              relations: ["user"],
+            })
+          ).map((el) => {
+            return {
+              id: el.id,
+              text: el.text,
+              user: {
+                id: el.user.id,
+                nickname: el.user.nickname,
+                image: el.user.image,
+              },
+            };
+          });
+          if (!result) {
+            recomments = result;
+          }
+
           let res: CommentInterface = {
             id: c.id,
             text: c.text,
-            userId: c.user.id,
+            user: user,
             wineId: c.wine.id,
             good_count: c.good_count,
             bad_count: c.bad_count,
             rating: c.rating,
-            recomments: await recommentRepo.find({ where: { comment: c.id } }),
+            recomments: recomments,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
           };
           results.push(res);
         }
@@ -151,7 +197,11 @@ export = {
         throw new Error();
       }
     } catch (err) {
-      res.status(404).send({ message: "wineId or accessToken not found." });
+      if (err.message === "userId") {
+        res.status(401).send({ message: "you are unauthorized" });
+      } else {
+        res.status(404).send({ message: "wineId not found." });
+      }
     }
   },
   delete: async (req: Request, res: Response) => {
