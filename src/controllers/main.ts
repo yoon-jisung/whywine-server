@@ -109,7 +109,7 @@ export = {
     if (req.query.word) {
       word = String(req.query.word);
       if (word.length < 2) {
-        res.status(404).send({ message: "search word is too short." });
+        res.status(200).send({ message: "search word is too short." });
         return;
       }
     } else {
