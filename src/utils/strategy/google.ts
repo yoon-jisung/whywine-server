@@ -14,9 +14,7 @@ export default () => {
                 callbackURL: `${server}/auth/google/callback`
             },
             async function (accessToken:string, refreshToken:string, profile:any, cb:any) {
-                
                 try {
-                    console.log(profile)
                     const { _json: { email, name, picture, sub} } = profile;
                     
                     const users = (await createQueryBuilder("user")
