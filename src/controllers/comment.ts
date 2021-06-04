@@ -126,22 +126,33 @@ export = {
       const wineId: number = Number(req.query.wineid);
       let userId: number;
       let user: User;
+
+      let usersgood: number[] = [];
+      let usersbad: number[] = [];
+
       if (req.session.passport) {
         userId = req.session!.passport!.user;
       } else {
         userId = -1; // 비회원
       }
-      let result = await userRepo.findOne({
-        where: { id: userId }, // 3=>userId
-        relations: ["good", "bad"],
-      });
-      if (result) {
-        user = result;
-      } else {
-        throw new Error("user");
+
+      if (userId !== -1) {
+        let result = await userRepo.findOne({
+          where: { id: userId }, // 3=>userId
+          relations: ["good", "bad"],
+        });
+        if (result) {
+          user = result;
+          if (userId !== -1) {
+            usersgood = user.good.map((comment) => comment.id);
+            usersbad = user.bad.map((comment) => comment.id);
+          }
+        } else {
+          throw new Error("user");
+        }
       }
       const wine = await wineRepo.findOne({ id: wineId });
-      if (user && wine) {
+      if (wine) {
         let comments: Comment[] = await commentRepo.find({
           where: { wine: wineId },
           relations: ["user", "wine"],
@@ -189,13 +200,6 @@ export = {
           results.push(res);
         }
 
-        let usersgood: number[] = [];
-        let usersbad: number[] = [];
-
-        if (userId !== -1) {
-          usersgood = user.good.map((comment) => comment.id);
-          usersbad = user.bad.map((comment) => comment.id);
-        }
         res.status(200).send({
           data: {
             comments: results,
@@ -208,6 +212,7 @@ export = {
         throw new Error();
       }
     } catch (err) {
+      console.log(err);
       if (err.message === "user") {
         res.status(401).send({ message: "user not found." });
       } else {
