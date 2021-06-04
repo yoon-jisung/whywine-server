@@ -199,7 +199,7 @@ export = {
           };
           results.push(res);
         }
-
+        results.reverse();
         res.status(200).send({
           data: {
             comments: results,
