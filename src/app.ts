@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(
   cors({
-    origin: [client,"https://localhost:3000"],
+    origin: [client,"https://localhost:3000","https://whywine.co.kr"],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS", "DELETE", "PUT"],
     allowedHeaders: "Content-Type, Authorization",
