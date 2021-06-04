@@ -89,8 +89,14 @@ export = {
       const userRepo = await connection.getRepository(User);
 
       const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
-      const user: User | undefined = await userRepo.findOne({ id: userId }); // 2=>userId
+      const user: User | undefined = await userRepo.findOne({
+        where: { id: userId },
+        relations: ["wines"],
+      }); // 2=>userId
       if (wine && user) {
+        if (user.wines.findIndex((wine) => wine.id === wineId) !== -1) {
+          throw new Error("already liked");
+        }
         await wineRepo
           .createQueryBuilder()
           .update(Wine)
@@ -117,6 +123,8 @@ export = {
         res.status(404).send({ message: "user not existed" });
       } else if (e.message === "wine") {
         res.status(404).send({ message: "wine not existed" });
+      } else if (e.message === "already liked") {
+        res.status(404).send({ message: "이미 좋아요 누름" });
       }
     }
   },
@@ -141,13 +149,21 @@ export = {
       const userRepo = await connection.getRepository(User);
 
       const wine: Wine | undefined = await wineRepo.findOne({ id: wineId });
-      const user: User | undefined = await userRepo.findOne({ id: userId }); // 2=>userId
+      const user: User | undefined = await userRepo.findOne({
+        where: { id: userId },
+        relations: ["wines"],
+      }); // 2=>userId
       if (wine && user) {
+        let wineids = user.wines.findIndex((wine) => wine.id === wineId);
+        if (wineids === -1) {
+          throw new Error("not in wines");
+        }
         await connection
           .createQueryBuilder()
           .relation(User, "wines")
           .of(user)
           .remove(wineId);
+
         await connection
           .createQueryBuilder()
           .update(Wine)
@@ -169,6 +185,8 @@ export = {
         res.status(404).send({ message: "user not existed" });
       } else if (e.message === "wine") {
         res.status(404).send({ message: "wine not existed" });
+      } else if (e.message === "not in wines") {
+        res.status(404).send({ message: "안찜한 와인을 취소하고 있어용" });
       }
     }
   },

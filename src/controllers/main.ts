@@ -44,8 +44,12 @@ const getRandomThree = (sorted: sortedWine): Wine[] => {
 export = {
   tags: async (req: Request, res: Response) => {
     const connection = getConnection();
-    const tags: string[] = req.body.tags;
+    let tags: string[] = [];
     let sort: string[] = [];
+
+    if (req.body.tags) {
+      tags = req.body.tags;
+    }
     if (req.body.sort) {
       sort = req.body.sort;
     }
